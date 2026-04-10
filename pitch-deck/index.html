@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANANSI: Web of Shadows — Investor Pitch Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #0A0610;
+  color: #E8E0D0;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== SLIDE CONTAINER ===== */
+.deck {
+  position: relative;
+  width: 100vw; height: 100vh;
+}
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 80px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(.4,0,.2,1), transform 0.7s cubic-bezier(.4,0,.2,1), visibility 0s 0.7s;
+  z-index: 0;
+}
+.slide.active {
+  opacity: 1; visibility: visible;
+  transform: translateY(0);
+  transition: opacity 0.7s cubic-bezier(.4,0,.2,1), transform 0.7s cubic-bezier(.4,0,.2,1), visibility 0s 0s;
+  z-index: 1;
+}
+
+/* ===== ANIMATED WEB BACKGROUND ===== */
+.web-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  overflow: hidden;
+}
+.web-bg::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 29deg, rgba(212,175,55,0.03) 30deg, transparent 31deg),
+    repeating-conic-gradient(from 15deg at 30% 70%, transparent 0deg, transparent 29deg, rgba(212,175,55,0.02) 30deg, transparent 31deg),
+    repeating-conic-gradient(from 45deg at 70% 30%, transparent 0deg, transparent 29deg, rgba(212,175,55,0.025) 30deg, transparent 31deg);
+  animation: webRotate 120s linear infinite;
+}
+.web-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, transparent 0%, #0A0610 75%);
+}
+@keyframes webRotate {
+  to { transform: rotate(360deg); }
+}
+
+/* Web radial lines */
+.web-lines {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0.06;
+}
+.web-lines svg { width: 100%; height: 100%; }
+
+/* Particle layer */
+.particles {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: #D4AF37;
+  border-radius: 50%;
+  opacity: 0;
+  animation: particleFloat linear infinite;
+}
+@keyframes particleFloat {
+  0%   { opacity: 0; transform: translateY(0) scale(1); }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-100vh) scale(0.3); }
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4 { font-family: 'Cinzel', serif; font-weight: 700; line-height: 1.15; }
+h1 { font-size: clamp(2.2rem, 4.5vw, 4rem); }
+h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); color: #D4AF37; margin-bottom: 28px; }
+h3 { font-size: clamp(1.1rem, 1.8vw, 1.5rem); color: #D4AF37; margin-bottom: 10px; }
+p, li { font-size: clamp(0.9rem, 1.3vw, 1.15rem); line-height: 1.65; }
+.subtitle { font-family: 'Rajdhani', sans-serif; font-weight: 300; font-size: clamp(1rem, 1.8vw, 1.4rem); letter-spacing: 0.15em; text-transform: uppercase; color: #B8A88A; }
+
+/* ===== GOLD ACCENTS ===== */
+.gold { color: #D4AF37; }
+.gold-line {
+  width: 80px; height: 2px;
+  background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+  margin: 18px auto;
+}
+.gold-line-left {
+  width: 60px; height: 2px;
+  background: linear-gradient(90deg, #D4AF37, transparent);
+  margin: 12px 0;
+}
+
+/* ===== ADINKRA BORDER ===== */
+.adinkra-border {
+  position: absolute;
+  inset: 20px;
+  border: 1px solid rgba(212,175,55,0.12);
+  pointer-events: none;
+  z-index: 2;
+}
+.adinkra-border::before, .adinkra-border::after {
+  content: '';
+  position: absolute;
+  width: 30px; height: 30px;
+  border-color: #D4AF37;
+  border-style: solid;
+}
+.adinkra-border::before {
+  top: -1px; left: -1px;
+  border-width: 2px 0 0 2px;
+}
+.adinkra-border::after {
+  bottom: -1px; right: -1px;
+  border-width: 0 2px 2px 0;
+}
+/* additional corners */
+.corner-tr, .corner-bl {
+  position: absolute;
+  width: 30px; height: 30px;
+  border-color: #D4AF37;
+  border-style: solid;
+  pointer-events: none;
+  z-index: 2;
+}
+.corner-tr { top: 19px; right: 19px; border-width: 2px 2px 0 0; }
+.corner-bl { bottom: 19px; left: 19px; border-width: 0 0 2px 2px; }
+
+/* ===== DECORATIVE SVG ADINKRA SYMBOLS ===== */
+.adinkra-symbol {
+  position: absolute;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== LAYOUT UTILITIES ===== */
+.content { position: relative; z-index: 3; width: 100%; max-width: 1200px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 28px; }
+.four-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+/* ===== CARDS ===== */
+.card {
+  background: rgba(26,15,46,0.6);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 6px;
+  padding: 24px 26px;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.3s;
+}
+.card:hover { border-color: rgba(212,175,55,0.4); }
+.card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.card p, .card li { font-size: 0.95rem; }
+
+.card-accent {
+  border-top: 2px solid #D4AF37;
+}
+
+/* ===== PILLAR CARDS ===== */
+.pillar {
+  text-align: center;
+  padding: 30px 22px;
+}
+.pillar-icon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  display: block;
+}
+
+/* ===== REGION LIST ===== */
+.region-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.region-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: rgba(26,15,46,0.5);
+  border: 1px solid rgba(212,175,55,0.1);
+  border-radius: 6px;
+  padding: 16px 18px;
+}
+.region-num {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: 1.6rem;
+  color: #D4AF37;
+  line-height: 1;
+  min-width: 32px;
+}
+.region-item h4 { font-size: 0.95rem; color: #FFD700; margin-bottom: 4px; }
+.region-item p { font-size: 0.85rem; color: #B8A88A; }
+
+/* ===== COMPARISON ARROW ===== */
+.comp-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; flex-wrap: wrap;
+  margin: 20px 0;
+}
+.comp-item {
+  background: rgba(26,15,46,0.6);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 6px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 140px;
+}
+.comp-item.highlight {
+  border-color: #D4AF37;
+  background: rgba(212,175,55,0.1);
+}
+.comp-arrow { color: #D4AF37; font-size: 1.4rem; }
+
+/* ===== CHARACTER CARDS ===== */
+.char-card {
+  padding: 22px 24px;
+  border-left: 3px solid #D4AF37;
+  background: rgba(26,15,46,0.5);
+  border-radius: 0 6px 6px 0;
+}
+.char-card h3 { font-size: 1rem; }
+.char-role { font-size: 0.85rem; color: #5DADE2; margin-bottom: 6px; font-weight: 600; }
+.char-card p { font-size: 0.9rem; color: #C0B8A8; }
+
+/* ===== BULLET LIST ===== */
+ul.deck-list { list-style: none; padding: 0; }
+ul.deck-list li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 10px;
+  color: #D0C8B8;
+}
+ul.deck-list li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 9px;
+  width: 8px; height: 8px;
+  border: 1px solid #D4AF37;
+  transform: rotate(45deg);
+}
+
+/* ===== MECHANIC PILLS ===== */
+.mech-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-top: 18px; }
+.mech-pill {
+  text-align: center;
+  background: rgba(212,175,55,0.08);
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 30px;
+  padding: 10px 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  color: #FFD700;
+  letter-spacing: 0.05em;
+}
+
+/* ===== SLIDE COUNTER ===== */
+.slide-counter {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  color: rgba(212,175,55,0.5);
+  letter-spacing: 0.2em;
+  z-index: 100;
+}
+
+/* ===== NAV ARROWS ===== */
+.nav-btn {
+  position: fixed;
+  top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px;
+  background: rgba(212,175,55,0.08);
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 50%;
+  color: #D4AF37;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.3s, border-color 0.3s;
+}
+.nav-btn:hover { background: rgba(212,175,55,0.15); border-color: rgba(212,175,55,0.5); }
+.nav-prev { left: 20px; }
+.nav-next { right: 20px; }
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar {
+  position: fixed;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #D4AF37, #FFD700);
+  z-index: 100;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+}
+
+/* ===== TITLE SLIDE SPECIFICS ===== */
+.title-slide .game-title {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: clamp(2.8rem, 5.5vw, 5rem);
+  text-align: center;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #FFD700 0%, #D4AF37 40%, #B8860B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 12px rgba(212,175,55,0.3));
+  margin-bottom: 8px;
+}
+.title-slide .game-subtitle {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  font-size: clamp(1.2rem, 2.5vw, 2rem);
+  letter-spacing: 0.12em;
+  color: #B8A88A;
+  text-align: center;
+  margin-bottom: 30px;
+}
+.title-slide .tagline {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 300;
+  font-size: clamp(1rem, 1.6vw, 1.3rem);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #E8E0D0;
+  text-align: center;
+  margin-bottom: 40px;
+}
+.title-meta {
+  display: flex; gap: 30px; justify-content: center; flex-wrap: wrap;
+}
+.title-meta span {
+  font-size: 0.85rem;
+  color: #888;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid rgba(212,175,55,0.15);
+  padding: 6px 16px;
+  border-radius: 4px;
+}
+
+/* Web glow for title */
+.web-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ===== STAT BOXES ===== */
+.stat-row { display: flex; gap: 20px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+.stat-box {
+  text-align: center;
+  min-width: 120px;
+  padding: 16px 24px;
+  background: rgba(26,15,46,0.6);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 6px;
+}
+.stat-box .stat-val { font-family: 'Cinzel',serif; font-size: 1.8rem; color: #FFD700; font-weight: 700; }
+.stat-box .stat-label { font-size: 0.8rem; color: #B8A88A; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+
+/* ===== CLOSING SLIDE ===== */
+.closing-tagline {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  color: #D4AF37;
+  text-align: center;
+  margin-top: 30px;
+  opacity: 0.9;
+}
+
+/* ===== STATUS BADGES ===== */
+.badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.badge-done { background: rgba(46,204,113,0.15); color: #2ECC71; border: 1px solid rgba(46,204,113,0.3); }
+.badge-progress { background: rgba(93,173,226,0.15); color: #5DADE2; border: 1px solid rgba(93,173,226,0.3); }
+.badge-next { background: rgba(212,175,55,0.15); color: #D4AF37; border: 1px solid rgba(212,175,55,0.3); }
+
+/* ===== SPIDER THREAD CONNECTORS ===== */
+.thread-connector {
+  position: absolute;
+  background: linear-gradient(180deg, rgba(212,175,55,0.3), rgba(212,175,55,0));
+  width: 1px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Subtle vignette */
+.vignette {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(10,6,16,0.6) 100%);
+}
+
+/* ===== STORY ACTS ===== */
+.acts-row { display: flex; gap: 20px; margin-top: 18px; justify-content: center; }
+.act-block {
+  flex: 1;
+  max-width: 250px;
+  text-align: center;
+  padding: 16px;
+  border-top: 2px solid rgba(212,175,55,0.3);
+}
+.act-block .act-num { font-family: 'Cinzel',serif; font-size: 0.75rem; color: #D4AF37; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; }
+.act-block .act-name { font-family: 'Cinzel',serif; font-size: 1rem; color: #FFD700; }
+
+/* ===== SLIDE 8 specifics ===== */
+.audio-visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+/* ===== SLIDE 9 specifics ===== */
+.price-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 1.8rem;
+  color: #FFD700;
+  text-align: center;
+  margin: 10px 0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .two-col, .three-col, .four-col, .region-grid, .audio-visual-grid { grid-template-columns: 1fr; }
+  .mech-grid { grid-template-columns: repeat(3,1fr); }
+  .slide { padding: 40px 30px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="web-bg"></div>
+<div class="web-lines">
+  <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+    <g stroke="rgba(212,175,55,0.4)" stroke-width="0.5" fill="none">
+      <!-- Radial web lines from center -->
+      <line x1="960" y1="540" x2="0" y2="0"/>
+      <line x1="960" y1="540" x2="480" y2="0"/>
+      <line x1="960" y1="540" x2="960" y2="0"/>
+      <line x1="960" y1="540" x2="1440" y2="0"/>
+      <line x1="960" y1="540" x2="1920" y2="0"/>
+      <line x1="960" y1="540" x2="1920" y2="270"/>
+      <line x1="960" y1="540" x2="1920" y2="540"/>
+      <line x1="960" y1="540" x2="1920" y2="810"/>
+      <line x1="960" y1="540" x2="1920" y2="1080"/>
+      <line x1="960" y1="540" x2="1440" y2="1080"/>
+      <line x1="960" y1="540" x2="960" y2="1080"/>
+      <line x1="960" y1="540" x2="480" y2="1080"/>
+      <line x1="960" y1="540" x2="0" y2="1080"/>
+      <line x1="960" y1="540" x2="0" y2="810"/>
+      <line x1="960" y1="540" x2="0" y2="540"/>
+      <line x1="960" y1="540" x2="0" y2="270"/>
+      <!-- Concentric rings -->
+      <ellipse cx="960" cy="540" rx="150" ry="150"/>
+      <ellipse cx="960" cy="540" rx="320" ry="320"/>
+      <ellipse cx="960" cy="540" rx="520" ry="520"/>
+      <ellipse cx="960" cy="540" rx="750" ry="750"/>
+    </g>
+  </svg>
+</div>
+<div class="vignette"></div>
+<div class="particles" id="particles"></div>
+
+<!-- Navigation -->
+<button class="nav-btn nav-prev" onclick="changeSlide(-1)" aria-label="Previous slide">&#9664;</button>
+<button class="nav-btn nav-next" onclick="changeSlide(1)" aria-label="Next slide">&#9654;</button>
+<div class="slide-counter" id="slideCounter">01 / 10</div>
+<div class="progress-bar" id="progressBar" style="width:10%"></div>
+
+<!-- ==================== DECK ==================== -->
+<div class="deck" id="deck">
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide title-slide active" data-slide="1">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="web-glow"></div>
+  <div class="content" style="text-align:center;">
+    <p class="subtitle" style="margin-bottom:20px;">A Third-Person Action-Adventure</p>
+    <h1 class="game-title">ANANSI</h1>
+    <div class="game-subtitle">Web of Shadows</div>
+    <div class="gold-line"></div>
+    <p class="tagline">Outwit gods. Unmask kings. Rewrite the tale.</p>
+    <div class="title-meta">
+      <span>Third-Person Action-Adventure</span>
+      <span>PC &middot; PlayStation &middot; Xbox</span>
+      <span>Premium Single-Player</span>
+      <span>Unreal Engine 5</span>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: THE OPPORTUNITY -->
+<div class="slide" data-slide="2">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>The Opportunity</h2>
+    <div class="two-col">
+      <div>
+        <h3>Market Momentum</h3>
+        <ul class="deck-list">
+          <li>Third-person action-adventure is the dominant premium genre, with proven commercial success across mythological settings</li>
+          <li>God of War Ragnar&ouml;k: 15M+ copies. Black Myth Wukong: 20M+ in one month. Kena: 2.5M+</li>
+          <li>Players are actively seeking fresh, culturally distinctive worlds</li>
+          <li>African mythology is the <strong class="gold">largest untapped mythological foundation</strong> in AAA/AA gaming</li>
+        </ul>
+      </div>
+      <div>
+        <h3>The Gap</h3>
+        <ul class="deck-list">
+          <li>Norse, Greek, Japanese, and Chinese mythology have all been explored extensively</li>
+          <li><strong class="gold">No major AAA or AA title</strong> has explored West African folklore as its core foundation</li>
+          <li>A massive, underserved audience exists globally, including the African diaspora and mythology enthusiasts</li>
+          <li>First-mover advantage in defining this space</li>
+        </ul>
+      </div>
+    </div>
+    <div class="comp-row" style="margin-top:30px;">
+      <div class="comp-item">
+        <div class="gold" style="font-size:0.75rem;letter-spacing:0.1em;">NORSE</div>
+        <div style="font-size:0.95rem;">God of War</div>
+      </div>
+      <span class="comp-arrow">&#10145;</span>
+      <div class="comp-item">
+        <div class="gold" style="font-size:0.75rem;letter-spacing:0.1em;">CHINESE</div>
+        <div style="font-size:0.95rem;">Black Myth Wukong</div>
+      </div>
+      <span class="comp-arrow">&#10145;</span>
+      <div class="comp-item">
+        <div class="gold" style="font-size:0.75rem;letter-spacing:0.1em;">BALINESE</div>
+        <div style="font-size:0.95rem;">Kena</div>
+      </div>
+      <span class="comp-arrow">&#10145;</span>
+      <div class="comp-item highlight">
+        <div class="gold" style="font-size:0.75rem;letter-spacing:0.1em;">WEST AFRICAN</div>
+        <div style="font-size:1.05rem;font-weight:700;color:#FFD700;">Anansi</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: STORY -->
+<div class="slide" data-slide="3">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>The Story</h2>
+    <div class="two-col">
+      <div>
+        <ul class="deck-list">
+          <li>During a royal festival, the kingdom's storyteller is <strong class="gold">murdered mid-performance</strong></li>
+          <li>His unfinished tale tears open the boundary between the human and spirit worlds</li>
+          <li><strong class="gold">Kweku</strong>, an apprentice griot and petty thief, is marked by Anansi the trickster spirit</li>
+          <li>He must recover scattered tale fragments before a masked ruler uses stolen spiritual authority to remake the kingdom</li>
+          <li>Player choices shape alliances, trust, and which ending they reach</li>
+        </ul>
+        <p style="margin-top:16px;color:#5DADE2;font-size:0.9rem;">Core fantasy: Not the strongest warrior. Not the chosen king.<br><strong>The survivor who wins through wit.</strong></p>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <div class="acts-row" style="flex-direction:column;gap:14px;">
+          <div class="act-block" style="max-width:100%;">
+            <div class="act-num">Act I</div>
+            <div class="act-name">The Broken Festival</div>
+            <p style="font-size:0.85rem;color:#B8A88A;margin-top:4px;">The murder. The mark. The journey begins.</p>
+          </div>
+          <div class="act-block" style="max-width:100%;">
+            <div class="act-num">Act II</div>
+            <div class="act-name">Threads Across the Land</div>
+            <p style="font-size:0.85rem;color:#B8A88A;margin-top:4px;">Six regions. Six fragments. Allies and betrayals.</p>
+          </div>
+          <div class="act-block" style="max-width:100%;">
+            <div class="act-num">Act III</div>
+            <div class="act-name">The Final Story</div>
+            <p style="font-size:0.85rem;color:#B8A88A;margin-top:4px;">Confront the Masked Regent. Decide how the tale ends.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: CHARACTERS -->
+<div class="slide" data-slide="4">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>Characters</h2>
+    <div class="four-col">
+      <div class="char-card">
+        <div class="char-role">The Protagonist</div>
+        <h3>Kweku</h3>
+        <p>Clever, underestimated apprentice storyteller. Quick with words, fast on his feet. His arc explores the tension between deception for survival and deception for power.</p>
+      </div>
+      <div class="char-card" style="border-left-color:#5DADE2;">
+        <div class="char-role">The Trickster Spirit</div>
+        <h3>Anansi</h3>
+        <p>Charismatic ancient trickster. Neither fully benevolent nor malicious. Empowers Kweku while constantly testing his character and resolve.</p>
+      </div>
+      <div class="char-card" style="border-left-color:#2ECC71;">
+        <div class="char-role">The Hunter-Priestess</div>
+        <h3>Ama Serwaa</h3>
+        <p>Disciplined, capable, fundamentally at odds with Kweku's methods. She is the story's emotional anchor and a formidable ally.</p>
+      </div>
+      <div class="char-card" style="border-left-color:#E74C3C;">
+        <div class="char-role">The Antagonist</div>
+        <h3>Nana Bekoe</h3>
+        <p>The Masked Regent. Uses fear, ritual theater, and stolen spiritual authority to control the fractured kingdom. The political enemy.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: GAMEPLAY PILLARS -->
+<div class="slide" data-slide="5">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>Gameplay Pillars</h2>
+    <div class="four-col">
+      <div class="card pillar card-accent">
+        <span class="pillar-icon">&#9876;</span>
+        <h3>Cunning Over Brute Force</h3>
+        <p>Agility, misdirection, counters, traps, and trickster abilities. The player wins by being smarter, not stronger.</p>
+      </div>
+      <div class="card pillar card-accent">
+        <span class="pillar-icon">&#127793;</span>
+        <h3>Myth-Driven Exploration</h3>
+        <p>Sacred forests, spirit lakes, royal cities, and spirit realms shaped by living folklore. Every region tells a story.</p>
+      </div>
+      <div class="card pillar card-accent">
+        <span class="pillar-icon">&#128220;</span>
+        <h3>Story as Power</h3>
+        <p>Proverbs, lies, memory, and unfinished tales directly affect puzzles, combat encounters, and narrative outcomes.</p>
+      </div>
+      <div class="card pillar card-accent">
+        <span class="pillar-icon">&#127902;</span>
+        <h3>Cinematic Regional Adventure</h3>
+        <p>Each region has its own visual identity, internal conflict, boss encounter, and story fragment to recover.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: CORE MECHANICS -->
+<div class="slide" data-slide="6">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>Core Mechanics</h2>
+    <div class="three-col">
+      <div class="card">
+        <h3>Combat</h3>
+        <p>Third-person melee with dodge, counter, and gadget-like spirit abilities. Rewards cleverness, not brute force. Enemies require observation and adaptation.</p>
+      </div>
+      <div class="card">
+        <h3>Stealth</h3>
+        <p>Infiltrate cities, shrines, and forests. Social stealth with voice mimicry and disguise. Avoid, deceive, or manipulate rather than fight.</p>
+      </div>
+      <div class="card">
+        <h3>Traversal</h3>
+        <p>Rooftops, trees, cliff faces, web-swinging, and spirit-thread pathways. Fluid, vertical movement through diverse terrain.</p>
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:20px;">
+      <div class="card">
+        <h3>Puzzles</h3>
+        <p>Voice mimicry, Adinkra symbol interpretation, rhythm challenges, memory sequences, and proverb-based gates. Culturally rooted and mechanically varied.</p>
+      </div>
+      <div class="card">
+        <h3>Narrative Choices</h3>
+        <p>Dialogue, alliances, and moral decisions shape the story. Multiple endings based on accumulated choices. Trust is a resource.</p>
+      </div>
+    </div>
+    <h3 style="text-align:center;margin-top:28px;">Signature Powers</h3>
+    <div class="mech-grid">
+      <div class="mech-pill">Silken Path</div>
+      <div class="mech-pill">Borrowed Voice</div>
+      <div class="mech-pill">Spider Sense</div>
+      <div class="mech-pill">Trick Mirror</div>
+      <div class="mech-pill">Story Bind</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: WORLD & REGIONS -->
+<div class="slide" data-slide="7">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>World &amp; Regions</h2>
+    <p style="text-align:center;color:#B8A88A;margin-bottom:24px;">Six handcrafted regions, each with unique gameplay, visual identity, and a story fragment to recover.</p>
+    <div class="region-grid">
+      <div class="region-item">
+        <div class="region-num">I</div>
+        <div>
+          <h4>Festival Capital City</h4>
+          <p>Politics, stealth, social infiltration. The site of the first betrayal and the journey's origin.</p>
+        </div>
+      </div>
+      <div class="region-item">
+        <div class="region-num">II</div>
+        <div>
+          <h4>Whispering Forest</h4>
+          <p>Dense traversal, spirit beasts, paths that rearrange themselves. Navigation is the puzzle.</p>
+        </div>
+      </div>
+      <div class="region-item">
+        <div class="region-num">III</div>
+        <div>
+          <h4>Lake of Echoes</h4>
+          <p>Canoe travel, submerged ruins, memory puzzles. Sound and silence shape the environment.</p>
+        </div>
+      </div>
+      <div class="region-item">
+        <div class="region-num">IV</div>
+        <div>
+          <h4>Gold Roads</h4>
+          <p>Open traversal, merchant caravans, faction quests. The kingdom's economic and cultural artery.</p>
+        </div>
+      </div>
+      <div class="region-item">
+        <div class="region-num">V</div>
+        <div>
+          <h4>Red Cliffs</h4>
+          <p>Vertical platforming, oracle tombs, elite enemies. The most challenging combat region.</p>
+        </div>
+      </div>
+      <div class="region-item">
+        <div class="region-num">VI</div>
+        <div>
+          <h4>The Web Realm</h4>
+          <p>Surreal spirit domain. Boss arenas, endgame content. Where stories become reality.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: ART & AUDIO IDENTITY -->
+<div class="slide" data-slide="8">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>Art &amp; Audio Identity</h2>
+    <div class="audio-visual-grid">
+      <div>
+        <div class="card" style="margin-bottom:20px;">
+          <h3>Visual Style</h3>
+          <p>Ghanaian textiles, carved wood motifs, gold regalia, Adinkra symbolic design, and luminous spirit-thread effects. Every visual element is culturally grounded.</p>
+        </div>
+        <div class="card">
+          <h3>Corruption Language</h3>
+          <p>Woven shadows, cracked symbols, impossible geometry. Corruption is expressed through <em>broken craft and unraveled pattern</em>, not generic smoke or darkness.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:20px;">
+          <h3>Music &amp; Sound</h3>
+          <p>Layered percussion, call-and-response vocals, ritual rhythms, region-specific instrumentation. An original score rooted in West African musical traditions.</p>
+        </div>
+        <div class="card">
+          <h3>Music as Gameplay</h3>
+          <p>Some enemies and puzzles are <strong class="gold">rhythm-sensitive</strong>. Music is not just atmosphere; it is a mechanical layer that rewards attentive players.</p>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:24px;padding:14px;border:1px solid rgba(212,175,55,0.15);border-radius:6px;background:rgba(26,15,46,0.4);">
+      <p style="color:#D4AF37;font-family:'Cinzel',serif;font-size:1rem;">Culturally grounded. Visually distinct. Highly marketable.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: MARKET POSITION -->
+<div class="slide" data-slide="9">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>Market Position</h2>
+    <div class="two-col">
+      <div>
+        <h3>Target Audience</h3>
+        <ul class="deck-list">
+          <li>Players of Assassin's Creed, Prince of Persia, Tomb Raider, God of War</li>
+          <li>Fans of Kena: Bridge of Spirits and Black Myth: Wukong</li>
+          <li>Mythology enthusiasts seeking fresh settings</li>
+          <li>African diaspora audience (global, underserved)</li>
+        </ul>
+        <h3 style="margin-top:24px;">Why It Stands Out</h3>
+        <ul class="deck-list">
+          <li>Underused mythological foundation</li>
+          <li>Ghana/Africa-rooted world design</li>
+          <li>Trickster mechanics (not brute-force power fantasy)</li>
+          <li>Strong visual and musical differentiation</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Business Model</h3>
+        <div class="price-tag">$49.99 &mdash; $69.99</div>
+        <p style="text-align:center;color:#B8A88A;margin-bottom:20px;">Premium single-player release</p>
+        <h3>Expansion Potential</h3>
+        <ul class="deck-list">
+          <li>Story DLC (new regions, new tale fragments)</li>
+          <li>Cosmetics: masks, textiles, spirit-thread styles</li>
+          <li>Art book and original soundtrack release</li>
+        </ul>
+        <h3 style="margin-top:20px;">Franchise Potential</h3>
+        <ul class="deck-list">
+          <li>Sequel campaigns exploring broader African mythology</li>
+          <li>Companion character spin-off (Ama Serwaa)</li>
+          <li>Transmedia opportunities: animation, graphic novel</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: THE ASK -->
+<div class="slide" data-slide="10">
+  <div class="adinkra-border"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="content">
+    <h2>Current Status &amp; The Ask</h2>
+    <div class="three-col" style="margin-bottom:28px;">
+      <div class="card" style="text-align:center;">
+        <span class="badge badge-done">Complete</span>
+        <h3 style="margin-top:12px;">Design Foundation</h3>
+        <p>Full Game Design Document. Technical design. UE5 C++ codebase (60+ source files). Playable browser prototype.</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <span class="badge badge-progress">In Progress</span>
+        <h3 style="margin-top:12px;">Vertical Slice Plan</h3>
+        <p>24-week production plan. Core systems architecture. Art direction pipeline. First region blockout.</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <span class="badge badge-next">Seeking</span>
+        <h3 style="margin-top:12px;">Funding Partner</h3>
+        <p>Investment or publishing partnership to fund the vertical slice and bring the vision to full production.</p>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val">60+</div>
+        <div class="stat-label">UE5 Source Files</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">24</div>
+        <div class="stat-label">Week Slice Plan</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">6</div>
+        <div class="stat-label">Regions Designed</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">UE5</div>
+        <div class="stat-label">Engine</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+      <p style="color:#B8A88A;font-size:0.95rem;">The Team: <span style="color:#888;">[Team details]</span> &nbsp;&middot;&nbsp; Contact: <span style="color:#888;">[Contact info]</span></p>
+    </div>
+    <div class="gold-line" style="margin-top:24px;"></div>
+    <p class="closing-tagline">"Every story takes something. This one takes everything."</p>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+// ===== SLIDE NAVIGATION =====
+let current = 1;
+const total = 10;
+
+function showSlide(n) {
+  if (n < 1 || n > total) return;
+  const slides = document.querySelectorAll('.slide');
+  slides.forEach(s => s.classList.remove('active'));
+  const target = document.querySelector(`[data-slide="${n}"]`);
+  if (target) {
+    target.classList.add('active');
+    current = n;
+    document.getElementById('slideCounter').textContent =
+      String(n).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+    document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+  }
+}
+
+function changeSlide(dir) {
+  showSlide(current + dir);
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault();
+    changeSlide(1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    changeSlide(-1);
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    showSlide(1);
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    showSlide(total);
+  }
+});
+
+// Touch support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+document.addEventListener('touchend', e => {
+  const diff = e.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(diff) > 50) changeSlide(diff < 0 ? 1 : -1);
+});
+
+// ===== PARTICLES =====
+(function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = (80 + Math.random() * 40) + '%';
+    p.style.width = (1 + Math.random() * 2) + 'px';
+    p.style.height = p.style.width;
+    p.style.animationDuration = (8 + Math.random() * 16) + 's';
+    p.style.animationDelay = (Math.random() * 12) + 's';
+    container.appendChild(p);
+  }
+})();
+</script>
+</body>
+</html>

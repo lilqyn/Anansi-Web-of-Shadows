@@ -1,0 +1,24 @@
+# UE5 build artifacts (will appear later)
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Build/
+
+# IDE
+.vs/
+.vscode/
+*.sln
+*.suo
+*.user
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Compiled
+*.pdb
+*.exe
+*.dll
+*.lib
+*.obj

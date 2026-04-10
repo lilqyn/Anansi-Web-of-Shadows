@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anansi: Web of Shadows</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🕷</text></svg>">
+</head>
+<body>
+
+<!-- Title Screen -->
+<div id="title-screen">
+    <div class="title-web-bg"></div>
+    <div class="title-content">
+        <div class="game-title">Anansi</div>
+        <div class="game-subtitle">Web of Shadows</div>
+        <div class="title-tagline">A tale half-told is a world half-broken</div>
+        <div class="controls-box">
+            <h3>Controls</h3>
+            <div class="controls-grid">
+                <div class="control-item"><span class="key-name">A / D</span><span class="key-desc">Move Left / Right</span></div>
+                <div class="control-item"><span class="key-name">W / Up</span><span class="key-desc">Jump / Interact</span></div>
+                <div class="control-item"><span class="key-name">S / Down</span><span class="key-desc">Crouch / Stealth</span></div>
+                <div class="control-item"><span class="key-name">SPACE</span><span class="key-desc">Attack (combo)</span></div>
+                <div class="control-item"><span class="key-name">SHIFT</span><span class="key-desc">Dodge Roll</span></div>
+                <div class="control-item"><span class="key-name">Q</span><span class="key-desc">Parry / Counter</span></div>
+                <div class="control-item"><span class="key-name">E</span><span class="key-desc">Silken Path</span></div>
+                <div class="control-item"><span class="key-name">R</span><span class="key-desc">Spider Sense</span></div>
+                <div class="control-item"><span class="key-name">F</span><span class="key-desc">Trick Mirror</span></div>
+                <div class="control-item"><span class="key-name">V</span><span class="key-desc">Borrowed Voice</span></div>
+            </div>
+        </div>
+        <button id="start-btn" onclick="Game.start()">Begin the Story</button>
+    </div>
+</div>
+
+<!-- Demo Complete Screen -->
+<div id="demo-complete-screen">
+    <div class="demo-title">ANANSI: WEB OF SHADOWS</div>
+    <div class="demo-subtitle">Demo Complete</div>
+    <div class="demo-quote">"The story is only beginning..."</div>
+    <div class="demo-stats">
+        <div class="stat-row">Enemies Defeated: <span class="stat-value" id="stat-enemies">0</span></div>
+        <div class="stat-row">Story Fragments: <span class="stat-value" id="stat-fragments">0</span> / 3</div>
+        <div class="stat-row">Stealth Takedowns: <span class="stat-value" id="stat-stealth">0</span></div>
+        <div class="stat-row">Max Combo: <span class="stat-value" id="stat-combo">0</span></div>
+    </div>
+    <button id="replay-btn" onclick="Game.restart()">Play Again</button>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+    <!-- Top Left: Health & Energy -->
+    <div class="hud-top-left">
+        <div class="bar-container health-bar">
+            <div class="bar-fill" id="health-fill"></div>
+            <div class="bar-label">LIFE</div>
+            <div class="bar-border-adinkra"></div>
+        </div>
+        <div class="bar-container energy-bar">
+            <div class="bar-fill" id="energy-fill"></div>
+            <div class="bar-label">SPIRIT</div>
+            <div class="bar-border-adinkra"></div>
+        </div>
+    </div>
+
+    <!-- Top Center: Objective -->
+    <div class="hud-top-center">
+        <div id="objective-text"></div>
+    </div>
+
+    <!-- Top Right: Fragments -->
+    <div class="hud-top-right">
+        <div id="fragment-display">
+            <span class="fragment-icon">&#9674;</span>
+            <span id="fragment-count">0 / 3</span>
+        </div>
+    </div>
+
+    <!-- Area Name (center, fades) -->
+    <div id="area-name-display">
+        <div id="area-name-text"></div>
+        <div id="area-name-sub"></div>
+    </div>
+
+    <!-- Combo Counter (right side) -->
+    <div id="combo-container">
+        <div id="combo-count">0</div>
+        <div id="combo-label">HITS</div>
+        <div id="style-rating"></div>
+    </div>
+
+    <!-- Boss Health Bar -->
+    <div id="boss-bar" class="bar-container">
+        <div class="bar-fill" id="boss-fill"></div>
+        <div class="bar-label" id="boss-name">The Mask Guardian</div>
+    </div>
+
+    <!-- Ability Bar (bottom center) -->
+    <div id="ability-bar">
+        <div class="ability-slot" id="ability-e" data-locked="true">
+            <div class="cooldown-overlay"></div>
+            <span class="key">E</span>
+            <span class="name">Silken Path</span>
+        </div>
+        <div class="ability-slot" id="ability-r" data-locked="true">
+            <div class="cooldown-overlay"></div>
+            <span class="key">R</span>
+            <span class="name">Spider Sense</span>
+        </div>
+        <div class="ability-slot" id="ability-f" data-locked="true">
+            <div class="cooldown-overlay"></div>
+            <span class="key">F</span>
+            <span class="name">Trick Mirror</span>
+        </div>
+        <div class="ability-slot" id="ability-v" data-locked="true">
+            <div class="cooldown-overlay"></div>
+            <span class="key">V</span>
+            <span class="name">Borrowed Voice</span>
+        </div>
+    </div>
+
+    <!-- Dialogue Box -->
+    <div id="dialogue-box">
+        <div id="dialogue-portrait"></div>
+        <div id="dialogue-content">
+            <div id="dialogue-speaker"></div>
+            <div id="dialogue-text"></div>
+            <div id="dialogue-choices"></div>
+            <div id="dialogue-continue">[W] Continue</div>
+        </div>
+    </div>
+
+    <!-- Interaction Prompt -->
+    <div id="interact-prompt">
+        <span class="prompt-key">W</span>
+        <span id="prompt-text">Talk</span>
+    </div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script src="game.js"></script>
+</body>
+</html>

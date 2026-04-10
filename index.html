@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anansi: Web of Shadows</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="title-screen">
+            <h1>ANANSI</h1>
+            <h2>Web of Shadows</h2>
+            <p class="subtitle">The Spider of Legend</p>
+            <div class="controls-info">
+                <p><strong>Controls:</strong></p>
+                <p>A / D or Arrow Keys — Move</p>
+                <p>W or Up Arrow — Jump</p>
+                <p>SPACE — Attack</p>
+                <p>SHIFT — Shoot Web</p>
+                <p>E — Web Trap</p>
+            </div>
+            <button id="startBtn">START GAME</button>
+        </div>
+        <div id="game-over-screen" class="hidden">
+            <h1>DEFEATED</h1>
+            <p id="final-score"></p>
+            <p id="final-wave"></p>
+            <button id="restartBtn">TRY AGAIN</button>
+        </div>
+        <div id="hud">
+            <div id="health-bar">
+                <div id="health-fill"></div>
+                <span id="health-text">HP</span>
+            </div>
+            <div id="energy-bar">
+                <div id="energy-fill"></div>
+                <span id="energy-text">WEB</span>
+            </div>
+            <div id="score-display">SCORE: <span id="score">0</span></div>
+            <div id="wave-display">WAVE: <span id="wave">1</span></div>
+            <div id="combo-display" class="hidden">COMBO x<span id="combo">0</span></div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

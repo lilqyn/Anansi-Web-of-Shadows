@@ -20,6 +20,7 @@
 #include "Traversal/GrapplePoint.h"
 #include "Traversal/Zipline.h"
 #include "World/MovingPlatform.h"
+#include "World/BreakableObject.h"
 #include "Core/DifficultySettings.h"
 #include "EngineUtils.h"
 #include "Combat/CombatComponent.h"
@@ -544,4 +545,30 @@ void UAnansiCheatManager::Anansi_SpawnZipline()
 		Zip->EndOffset = Anansi->GetActorForwardVector() * 1500.0f + FVector(0, 0, -300);
 		UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned zipline forward"));
 	}
+}
+
+void UAnansiCheatManager::Anansi_SpawnCrates(int32 Count)
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	Count = FMath::Clamp(Count, 1, 20);
+
+	for (int32 i = 0; i < Count; ++i)
+	{
+		const FVector Offset(
+			FMath::FRandRange(-400.0f, 400.0f),
+			FMath::FRandRange(-400.0f, 400.0f),
+			25.0f);
+
+		const FVector Loc = Anansi->GetActorLocation() + Anansi->GetActorForwardVector() * 300.0f + Offset;
+
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		GetWorld()->SpawnActor<ABreakableObject>(ABreakableObject::StaticClass(), Loc,
+			FRotator(0, FMath::FRandRange(0.0f, 360.0f), 0), Params);
+	}
+
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned %d breakable crates"), Count);
 }

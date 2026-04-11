@@ -126,6 +126,10 @@ public:
 	UFUNCTION(Exec)
 	void Anansi_SpawnZipline();
 
+	/** Spawn breakable crates around the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnCrates(int32 Count = 5);
+
 private:
 	bool bGodMode = false;
 };

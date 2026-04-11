@@ -10,6 +10,7 @@
 #include "World/InteractionComponent.h"
 #include "UI/AnansiDevHUD.h"
 #include "AI/SimpleEnemyAI.h"
+#include "AI/EnemyBase.h"
 #include "Core/CombatStats.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
@@ -473,6 +474,59 @@ void AAnansiCharacter::Input_LightAttack(const FInputActionValue& Value)
 		SetCharacterState(EAnansiCharacterState::Attacking);
 	}
 
+	// -- Execution finisher (low-health enemy in front) ---------------------
+	if (!bIsSprinting && !bIsCrouching && MeleeDamage)
+	{
+		TArray<AActor*> Enemies;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Enemy"), Enemies);
+
+		for (AActor* Enemy : Enemies)
+		{
+			AEnemyBase* EBase = Cast<AEnemyBase>(Enemy);
+			if (!EBase || EBase->IsDead()) continue;
+			if (EBase->GetHealthPercent() > 0.2f) continue; // Only below 20% HP
+
+			const float Dist = FVector::Dist(GetActorLocation(), Enemy->GetActorLocation());
+			if (Dist > 250.0f) continue;
+
+			const FVector ToEnemy = (Enemy->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+			if (FVector::DotProduct(GetActorForwardVector(), ToEnemy) < 0.5f) continue;
+
+			// Execute!
+			FDamageEvent DmgEvent;
+			Enemy->TakeDamage(99999.0f, DmgEvent, GetController(), this);
+
+			// Cinematic slow-mo
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.1f);
+			FTimerHandle ExecSlowMo;
+			GetWorldTimerManager().SetTimer(ExecSlowMo, [this]()
+			{
+				UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+			}, 0.05f, false);
+
+			if (APlayerController* PC = Cast<APlayerController>(Controller))
+			{
+				PC->ClientStartCameraShake(UAnansiDamageShake::StaticClass());
+				if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+				{
+					HUD->ShowToast(TEXT("EXECUTION!"), FColor(255, 50, 50));
+					HUD->FlashScreen(FLinearColor(0.8f, 0.1f, 0.05f), 0.25f);
+				}
+			}
+
+			SetCharacterState(EAnansiCharacterState::Attacking);
+			FTimerHandle ExecReset;
+			GetWorldTimerManager().SetTimer(ExecReset, [this]()
+			{
+				if (CurrentState == EAnansiCharacterState::Attacking)
+					SetCharacterState(EAnansiCharacterState::Idle);
+			}, 0.6f, false);
+
+			UE_LOG(LogAnansi, Log, TEXT("EXECUTION on %s!"), *Enemy->GetName());
+			return;
+		}
+	}
+
 	// -- Dash attack (sprinting + light attack) -----------------------------
 	if (bIsSprinting && MeleeDamage)
 	{
@@ -742,6 +796,33 @@ void AAnansiCharacter::Input_CrouchToggle(const FInputActionValue& Value)
 {
 	if (CurrentState == EAnansiCharacterState::Dead || CurrentState == EAnansiCharacterState::Stunned)
 	{
+		return;
+	}
+
+	// Slide if sprinting + crouch
+	if (bIsSprinting && !bIsCrouching)
+	{
+		bIsSprinting = false;
+		bIsCrouching = true;
+		Crouch();
+		SetCharacterState(EAnansiCharacterState::Crouching);
+
+		// Launch forward in a slide
+		LaunchCharacter(GetActorForwardVector() * 1000.0f, true, false);
+
+		// Auto-uncrouch after slide duration
+		FTimerHandle SlideTimer;
+		GetWorldTimerManager().SetTimer(SlideTimer, [this]()
+		{
+			if (bIsCrouching)
+			{
+				bIsCrouching = false;
+				UnCrouch();
+				SetCharacterState(EAnansiCharacterState::Idle);
+			}
+		}, 0.7f, false);
+
+		UE_LOG(LogAnansi, Verbose, TEXT("Slide!"));
 		return;
 	}
 

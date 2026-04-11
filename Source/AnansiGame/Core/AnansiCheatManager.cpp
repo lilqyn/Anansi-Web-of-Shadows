@@ -18,6 +18,8 @@
 #include "AI/EnemyRanged.h"
 #include "World/TimeOfDayManager.h"
 #include "Traversal/GrapplePoint.h"
+#include "Traversal/Zipline.h"
+#include "World/MovingPlatform.h"
 #include "Core/DifficultySettings.h"
 #include "EngineUtils.h"
 #include "Combat/CombatComponent.h"
@@ -502,5 +504,44 @@ void UAnansiCheatManager::Anansi_SetDifficulty(int32 Level)
 			EDifficulty NewDiff = static_cast<EDifficulty>(FMath::Clamp(Level, 0, 2));
 			Diff->SetDifficulty(NewDiff);
 		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_SpawnPlatform()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 500.0f) + FVector(0, 0, 100);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AMovingPlatform* Plat = GetWorld()->SpawnActor<AMovingPlatform>(
+		AMovingPlatform::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+
+	if (Plat)
+	{
+		UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned moving platform (vertical, 500 units)"));
+	}
+}
+
+void UAnansiCheatManager::Anansi_SpawnZipline()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = Anansi->GetActorLocation() + FVector(0, 0, 50);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AZipline* Zip = GetWorld()->SpawnActor<AZipline>(
+		AZipline::StaticClass(), Loc, Anansi->GetActorRotation(), Params);
+
+	if (Zip)
+	{
+		Zip->EndOffset = Anansi->GetActorForwardVector() * 1500.0f + FVector(0, 0, -300);
+		UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned zipline forward"));
 	}
 }

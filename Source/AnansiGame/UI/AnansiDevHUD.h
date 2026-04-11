@@ -35,6 +35,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
 	void ShowToast(const FString& Message, FColor Color = FColor::White);
 
+	/** Flash the screen a color (for parry, finisher, etc). */
+	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
+	void FlashScreen(FLinearColor Color = FLinearColor::White, float Duration = 0.15f);
+
 	/** Show the game over screen. */
 	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
 	void ShowGameOver();
@@ -104,6 +108,10 @@ private:
 		float TimeRemaining;
 	};
 	TArray<FToastMessage> ActiveToasts;
+
+	FLinearColor ScreenFlashColor = FLinearColor::Transparent;
+	float ScreenFlashTimer = 0.0f;
+	float ScreenFlashDuration = 0.15f;
 
 	UPROPERTY()
 	TWeakObjectPtr<class ABossBase> ActiveBoss;

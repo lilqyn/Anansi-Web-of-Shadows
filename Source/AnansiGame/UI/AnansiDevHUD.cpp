@@ -74,6 +74,15 @@ void AAnansiDevHUD::DrawHUD()
 	{
 		DrawPauseScreen();
 	}
+
+	// Screen flash overlay
+	if (ScreenFlashTimer > 0.0f)
+	{
+		ScreenFlashTimer -= DeltaTime;
+		const float Alpha = FMath::Clamp(ScreenFlashTimer / ScreenFlashDuration, 0.0f, 1.0f);
+		DrawRect(FLinearColor(ScreenFlashColor.R, ScreenFlashColor.G, ScreenFlashColor.B, Alpha * 0.4f),
+			0, 0, Canvas->SizeX, Canvas->SizeY);
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -1209,4 +1218,15 @@ void AAnansiDevHUD::DrawDifficultyDisplay()
 				30.0f, Canvas->SizeY - 30.0f, 0.8f, 0.8f);
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Screen flash
+// ---------------------------------------------------------------------------
+
+void AAnansiDevHUD::FlashScreen(FLinearColor Color, float Duration)
+{
+	ScreenFlashColor = Color;
+	ScreenFlashTimer = Duration;
+	ScreenFlashDuration = Duration;
 }

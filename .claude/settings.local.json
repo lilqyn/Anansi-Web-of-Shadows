@@ -31,7 +31,9 @@
       "Bash(powershell -Command 'Get-Process | Where-Object { $_.Name -match '\\\\''Unreal|Crash'\\\\'' } | Stop-Process -Force')",
       "Bash(powershell -Command \"Stop-Process -Name UnrealEditor,CrashReportClientEditor,UnrealTraceServer,crashpad_handler -Force -ErrorAction SilentlyContinue\")",
       "Bash(powershell -Command 'Get-Process | Where-Object { $_.Name -match '\\\\''Unreal|Crash|crashpad'\\\\'' } | Stop-Process -Force')",
-      "Bash(powershell -Command 'Get-Process | Where-Object { $_.Name -match '\\\\''Unreal|Crash|crashpad'\\\\'' } | Stop-Process -Force -ErrorAction SilentlyContinue')"
+      "Bash(powershell -Command 'Get-Process | Where-Object { $_.Name -match '\\\\''Unreal|Crash|crashpad'\\\\'' } | Stop-Process -Force -ErrorAction SilentlyContinue')",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh auth:*)"
     ]
   }
 }

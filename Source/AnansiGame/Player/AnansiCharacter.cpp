@@ -473,6 +473,42 @@ void AAnansiCharacter::Input_LightAttack(const FInputActionValue& Value)
 		SetCharacterState(EAnansiCharacterState::Attacking);
 	}
 
+	// -- Dash attack (sprinting + light attack) -----------------------------
+	if (bIsSprinting && MeleeDamage)
+	{
+		// Lunge forward
+		LaunchCharacter(GetActorForwardVector() * 600.0f, true, false);
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+
+		MeleeDamage->AttackRadius = 100.0f;
+		MeleeDamage->KnockbackForce = 800.0f;
+		const int32 DashHits = MeleeDamage->FireAttack(25.0f);
+		MeleeDamage->AttackRadius = 60.0f;
+		MeleeDamage->KnockbackForce = 400.0f;
+
+		if (DashHits > 0)
+		{
+			if (APlayerController* PC = Cast<APlayerController>(Controller))
+			{
+				PC->ClientStartCameraShake(UAnansiDamageShake::StaticClass());
+				if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+				{
+					HUD->ShowToast(TEXT("DASH ATTACK!"), FColor(255, 100, 255));
+				}
+			}
+		}
+
+		SetCharacterState(EAnansiCharacterState::Attacking);
+		FTimerHandle DashResetTimer;
+		GetWorldTimerManager().SetTimer(DashResetTimer, [this]()
+		{
+			if (CurrentState == EAnansiCharacterState::Attacking)
+				SetCharacterState(EAnansiCharacterState::Idle);
+		}, 0.5f, false);
+		return;
+	}
+
 	// -- Stealth takedown check (crouching + behind enemy) -----------------
 	if (bIsCrouching && MeleeDamage)
 	{
@@ -1511,6 +1547,15 @@ float AAnansiCharacter::TakeDamage(float DamageAmount, const FDamageEvent& Damag
 			{
 				if (UCombatStatsSubsystem* Stats = GI->GetSubsystem<UCombatStatsSubsystem>())
 					Stats->RecordParry();
+			}
+		}
+
+		// Screen flash
+		if (APlayerController* PC2 = Cast<APlayerController>(Controller))
+		{
+			if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC2->GetHUD()))
+			{
+				HUD->FlashScreen(FLinearColor(1.0f, 0.9f, 0.3f), 0.2f); // Gold flash
 			}
 		}
 

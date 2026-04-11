@@ -118,6 +118,14 @@ public:
 	UFUNCTION(Exec)
 	void Anansi_SetDifficulty(int32 Level = 1);
 
+	/** Spawn a moving platform in front of the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnPlatform();
+
+	/** Spawn a zipline in front of the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnZipline();
+
 private:
 	bool bGodMode = false;
 };

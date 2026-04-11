@@ -8,6 +8,9 @@ public class AnansiGame : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+		// Ensure subdirectory includes like "Combat/DamageTypes.h" resolve correctly.
+		PublicIncludePaths.Add(ModuleDirectory);
+
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core",
@@ -31,5 +34,15 @@ public class AnansiGame : ModuleRules
 		{
 			"AnimGraphRuntime"
 		});
+
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[]
+			{
+				"UnrealEd",
+				"EditorSubsystem",
+				"AssetTools"
+			});
+		}
 	}
 }

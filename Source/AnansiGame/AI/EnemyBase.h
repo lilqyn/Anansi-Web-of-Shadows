@@ -177,6 +177,8 @@ private:
 	void HandleDeath(AController* Killer);
 	void SpawnLoot();
 	void EnableRagdoll();
+	void FlashHitColor();
+	void ResetHitColor();
 
 	float CurrentHealth = 0.0f;
 	bool bIsDead = false;
@@ -184,4 +186,5 @@ private:
 	EEnemyAwareness AwarenessState = EEnemyAwareness::Unaware;
 
 	FTimerHandle StaggerTimerHandle;
+	FTimerHandle HitFlashTimerHandle;
 };

@@ -5,6 +5,7 @@
 #include "Player/AnansiCharacter.h"
 #include "Player/AnansiPlayerController.h"
 #include "Core/AnansiGameState.h"
+#include "UI/AnansiDevHUD.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
@@ -15,6 +16,7 @@ AAnansiGameMode::AAnansiGameMode()
 	DefaultPawnClass = AAnansiCharacter::StaticClass();
 	PlayerControllerClass = AAnansiPlayerController::StaticClass();
 	GameStateClass = AAnansiGameState::StaticClass();
+	HUDClass = AAnansiDevHUD::StaticClass();
 }
 
 void AAnansiGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)

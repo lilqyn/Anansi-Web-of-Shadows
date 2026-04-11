@@ -10,6 +10,10 @@
 
 class UCombatComponent;
 class UWeaponTraceComponent;
+class UMeleeDamageDealer;
+class UAnansiInteractionComponent;
+class UStaticMeshComponent;
+class UPostProcessComponent;
 class UAbilitySystemComponent;
 class UGameplayAbility;
 class USphereComponent;
@@ -86,6 +90,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void PossessedBy(AController* NewController) override;
+	virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent,
+		AController* EventInstigator, AActor* DamageCauser) override;
 
 	// IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -110,9 +116,25 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anansi|Combat")
 	TObjectPtr<UWeaponTraceComponent> WeaponTrace;
 
+	/** Proximity-based melee damage (works without weapon mesh). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anansi|Combat")
+	TObjectPtr<UMeleeDamageDealer> MeleeDamage;
+
 	/** Gameplay Ability System component. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anansi|Abilities")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComp;
+
+	/** Interaction detection and prompt management. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anansi|Interaction")
+	TObjectPtr<UAnansiInteractionComponent> InteractionComponent;
+
+	/** Visible capsule mesh so the player can see themselves without a skeletal mesh. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anansi|Visual")
+	TObjectPtr<UStaticMeshComponent> PlayerVisualMesh;
+
+	/** Post-processing for combat effects (hit flash, low-health vignette). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anansi|Visual")
+	TObjectPtr<UPostProcessComponent> PostProcessComp;
 
 	/** Spider Sense detection sphere — overlaps trigger threat warnings. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anansi|SpiderSense")
@@ -151,6 +173,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Anansi|Stats")
 	bool IsAlive() const { return CurrentHealth > 0.0f; }
+
+	/** Reset the player to full health and return to spawn point. */
+	UFUNCTION(BlueprintCallable, Category = "Anansi|Stats")
+	void Respawn();
 
 	UPROPERTY(BlueprintAssignable, Category = "Anansi|Stats")
 	FOnHealthChanged OnHealthChanged;
@@ -270,6 +296,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anansi|Input")
 	TObjectPtr<UInputAction> IA_WebSwing;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anansi|Input")
+	TObjectPtr<UInputAction> IA_Sprint;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anansi|Input")
+	TObjectPtr<UInputAction> IA_Interact;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anansi|Input")
+	TObjectPtr<UInputAction> IA_SpiderSense;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anansi|Input")
+	TObjectPtr<UInputAction> IA_SilkenPath;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anansi|Input")
+	TObjectPtr<UInputAction> IA_TrickMirror;
+
 	// -----------------------------------------------------------------------
 	// Input callbacks
 	// -----------------------------------------------------------------------
@@ -283,9 +324,16 @@ protected:
 	void Input_Dodge(const FInputActionValue& Value);
 	void Input_Parry(const FInputActionValue& Value);
 	void Input_CrouchToggle(const FInputActionValue& Value);
+	void Input_SprintStart(const FInputActionValue& Value);
+	void Input_SprintStop(const FInputActionValue& Value);
+	void Input_Interact(const FInputActionValue& Value);
 	void Input_LockOn(const FInputActionValue& Value);
 	void Input_WebSwing(const FInputActionValue& Value);
 	void Input_WebSwingRelease(const FInputActionValue& Value);
+	void Input_SpiderSense(const FInputActionValue& Value);
+	void Input_SilkenPath(const FInputActionValue& Value);
+	void Input_TrickMirror(const FInputActionValue& Value);
+	void Input_GroundSlam(const FInputActionValue& Value);
 
 	// -----------------------------------------------------------------------
 	// State machine helpers
@@ -354,6 +402,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Stats", meta = (ClampMin = "0.0"))
 	float WebEnergyRegenRate = 3.0f;
 
+	/** Auto-load Input Actions and Mapping Context from /Game/Input/ if not set. */
+	void AutoLoadInputAssets();
+
 	// -- Wall-run state -----------------------------------------------------
 	float WallRunTimer = 0.0f;
 	FVector WallRunNormal = FVector::ZeroVector;
@@ -361,6 +412,51 @@ private:
 	// -- Web-swing state ----------------------------------------------------
 	bool bIsWebSwinging = false;
 	FVector WebAnchorPoint = FVector::ZeroVector;
+
+	// -- Double jump --------------------------------------------------------
+	int32 JumpCount = 0;
+	int32 MaxJumpCount = 2;
+
+	/** Height threshold for fall damage (units). */
+	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Movement", meta = (ClampMin = "0.0"))
+	float FallDamageThreshold = 800.0f;
+
+	/** Damage per unit fallen beyond threshold. */
+	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Movement", meta = (ClampMin = "0.0"))
+	float FallDamagePerUnit = 0.05f;
+
+	float FallStartZ = 0.0f;
+	bool bIsFallingFromHeight = false;
+
+	// -- Sprint state -------------------------------------------------------
+	bool bIsSprinting = false;
+
+	/** Walk speed restored when sprint ends. */
+	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Movement", meta = (ClampMin = "0.0"))
+	float DefaultWalkSpeed = 600.0f;
+
+	/** Speed while sprinting. */
+	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Movement", meta = (ClampMin = "0.0"))
+	float SprintSpeed = 900.0f;
+
+	/** Stamina cost per second while sprinting. */
+	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Movement", meta = (ClampMin = "0.0"))
+	float SprintStaminaCostPerSecond = 12.0f;
+
+	// -- Wall slide ---------------------------------------------------------
+	bool bIsWallSliding = false;
+	FVector WallSlideNormal = FVector::ZeroVector;
+
+	void CheckWallSlide();
+
+	// -- Footstep sounds ----------------------------------------------------
+	float FootstepTimer = 0.0f;
+	float FootstepInterval = 0.35f;
+
+	void PlayFootstepSound();
+
+	// -- Trick Mirror decoy -------------------------------------------------
+	TWeakObjectPtr<AActor> ActiveDecoy;
 
 	// -- Stealth / crouch ---------------------------------------------------
 	bool bIsCrouching = false;

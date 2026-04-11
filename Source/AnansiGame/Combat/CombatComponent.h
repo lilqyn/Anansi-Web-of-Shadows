@@ -149,6 +149,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Anansi|Combat")
 	void ResetCombo();
 
+	/** Get the variety multiplier for the current combo (1.0-1.5). */
+	UFUNCTION(BlueprintPure, Category = "Anansi|Combat")
+	float GetComboVarietyMultiplier() const;
+
 	// -----------------------------------------------------------------------
 	// Configuration — combo data
 	// -----------------------------------------------------------------------
@@ -274,6 +278,13 @@ private:
 	int32 ComboCount = 0;
 	float TimeSinceLastHit = 0.0f;
 	EStyleRank CurrentStyleRank = EStyleRank::D;
+
+	/** Tracks attack type variety in the current combo (L vs H). */
+	int32 LightHitsInCombo = 0;
+	int32 HeavyHitsInCombo = 0;
+
+	/** Variety bonus multiplier (1.0 = no variety, up to 1.5 with good mix). */
+	float GetVarietyMultiplier() const;
 
 	void IncrementCombo();
 	EStyleRank CalculateStyleRank(int32 Combo) const;

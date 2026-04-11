@@ -66,6 +66,8 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UCombatComponent::RequestLightAttack()
 {
+	LightHitsInCombo++;
+
 	if (!LightComboData || LightComboData->GetHitCount() == 0)
 	{
 		return;
@@ -89,6 +91,8 @@ void UCombatComponent::RequestLightAttack()
 
 void UCombatComponent::RequestHeavyAttack()
 {
+	HeavyHitsInCombo++;
+
 	if (!HeavyComboData || HeavyComboData->GetHitCount() == 0)
 	{
 		return;
@@ -506,6 +510,8 @@ void UCombatComponent::ResetCombo()
 	const int32 OldCombo = ComboCount;
 	ComboCount = 0;
 	TimeSinceLastHit = 0.0f;
+	LightHitsInCombo = 0;
+	HeavyHitsInCombo = 0;
 	OnComboCountChanged.Broadcast(OldCombo, 0);
 
 	if (CurrentStyleRank != EStyleRank::D)
@@ -563,4 +569,22 @@ void UCombatComponent::EndHitStop()
 	{
 		Owner->CustomTimeDilation = 1.0f;
 	}
+}
+
+float UCombatComponent::GetComboVarietyMultiplier() const
+{
+	return GetVarietyMultiplier();
+}
+
+float UCombatComponent::GetVarietyMultiplier() const
+{
+	const int32 Total = LightHitsInCombo + HeavyHitsInCombo;
+	if (Total < 3) return 1.0f;
+
+	// Perfect variety = equal mix of L and H
+	const float Ratio = static_cast<float>(FMath::Min(LightHitsInCombo, HeavyHitsInCombo)) /
+		static_cast<float>(FMath::Max(LightHitsInCombo, HeavyHitsInCombo));
+
+	// 0 ratio = all one type (1.0x), 1.0 ratio = perfect mix (1.5x)
+	return 1.0f + Ratio * 0.5f;
 }

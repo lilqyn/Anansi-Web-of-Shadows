@@ -87,7 +87,7 @@ float UAnansiAbilitySystemComponent::GetWebEnergyPercent() const
 
 void UAnansiAbilitySystemComponent::BroadcastEnergyChange()
 {
-	OnWebEnergyChanged.Broadcast(CurrentWebEnergy, MaxWebEnergy);
+	OnASCWebEnergyChanged.Broadcast(CurrentWebEnergy, MaxWebEnergy);
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"GENERATED_BODY\\\\|GENERATED_USTRUCT_BODY\\\\|GENERATED_UENUM_BODY\" /c/Users/peter/Desktop/Anansi-Web-of-Shadows/Source/AnansiGame/**/*.h)",
+      "Bash(find /c/Users/peter/Desktop/Anansi-Web-of-Shadows/Source/AnansiGame -name \"*.h\" -type f -exec grep -L \"GENERATED_BODY\\(\\)\" {} \\\\;)",
+      "Bash(grep -n \"^class\\\\|^UCLASS\\\\|^USTRUCT\" /c/Users/peter/Desktop/Anansi-Web-of-Shadows/Source/AnansiGame/**/*.h)",
+      "Bash(grep -n \"class.*AI\" /c/Users/peter/Desktop/Anansi-Web-of-Shadows/Source/AnansiGame/**/*.h)",
+      "Bash(grep -n \"class UComboChainData\\\\|class ANiagaraActor\\\\|class UNiagaraSystem\\\\|class UPostProcessComponent\" /c/Users/peter/Desktop/Anansi-Web-of-Shadows/Source/AnansiGame/**/*.h)",
+      "Read(//c/Program Files/Epic Games/**)",
+      "Read(//c/Program Files \\(x86\\)/Epic Games/**)",
+      "Bash(reg query:*)",
+      "Bash(\"C:/Program Files/Epic Games/UE_5.7/Engine/Build/BatchFiles/Build.bat\" AnansiGameEditor Win64 Development \"c:/Users/peter/Desktop/Anansi-Web-of-Shadows/AnansiGame.uproject\" -waitmutex)",
+      "Read(//c/Program Files \\(x86\\)/Reference Assemblies/Microsoft/Framework/**)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio/18/BuildTools/MSBuild/Microsoft/NuGet/**)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio/Installer/**)",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/Installer/vs_installershell.exe\" modify --installPath \"C:/Program Files \\(x86\\)/Microsoft Visual Studio/18/BuildTools\" --add Microsoft.Net.Component.4.6.2.TargetingPack --quiet --norestart)",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/Installer/vs_installer.exe\" modify --installPath \"C:/Program Files \\(x86\\)/Microsoft Visual Studio/18/BuildTools\" --add Microsoft.Net.Component.4.6.2.TargetingPack --quiet --norestart)",
+      "Bash(powershell -Command \"Start-Process 'C:/Program Files \\(x86\\)/Microsoft Visual Studio/Installer/vs_installer.exe' -ArgumentList 'modify --installPath \\\\\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/18/BuildTools\\\\\" --add Microsoft.Net.Component.4.6.2.TargetingPack --quiet --norestart' -Verb RunAs -Wait\")",
+      "Bash(winget install:*)",
+      "Bash(tasklist)",
+      "Bash(powershell -Command \"Get-ChildItem -Path 'C:\\\\Users\\\\peter\\\\Desktop\\\\Anansi-Web-of-Shadows\\\\Intermediate\\\\Build\\\\BuildRules' -Recurse | Unblock-File\")",
+      "Bash(powershell -Command \"Unblock-File -Path 'C:\\\\Users\\\\peter\\\\Desktop\\\\Anansi-Web-of-Shadows\\\\Intermediate\\\\Build\\\\BuildRules\\\\AnansiGameModuleRules.dll'\")",
+      "Bash(powershell -Command \"Get-MpComputerStatus | Select-Object SmartAppControlState, SmartAppControlExpiration\")",
+      "Bash(powershell -Command \"\\(Get-MpPreference\\).SmartAppControlState\")",
+      "Bash(powershell -Command \"Add-MpPreference -ExclusionPath 'C:\\\\Users\\\\peter\\\\Desktop\\\\Anansi-Web-of-Shadows'\")",
+      "Bash(powershell -Command \"Start-Process powershell -ArgumentList '-Command Add-MpPreference -ExclusionPath \\\\\"C:\\\\Users\\\\peter\\\\Desktop\\\\Anansi-Web-of-Shadows\\\\\"' -Verb RunAs -Wait\")",
+      "Bash(powershell -Command \"Start-Process powershell -ArgumentList '-Command Set-MpPreference -SmartAppControlState Off' -Verb RunAs -Wait\")",
+      "Bash(taskkill /IM UnrealEditor.exe /F)",
+      "Bash(powershell -Command \"Stop-Process -Name UnrealEditor -Force\")",
+      "Bash(powershell -Command \"Stop-Process -Name CrashReportClientEditor -Force -ErrorAction SilentlyContinue; Stop-Process -Name CrashReportClient -Force -ErrorAction SilentlyContinue; Stop-Process -Name UnrealEditor -Force -ErrorAction SilentlyContinue\")",
+      "Bash(powershell -Command 'Get-Process | Where-Object { $_.Name -match '\\\\''Unreal|Crash'\\\\'' } | Stop-Process -Force')",
+      "Bash(powershell -Command \"Stop-Process -Name UnrealEditor,CrashReportClientEditor,UnrealTraceServer,crashpad_handler -Force -ErrorAction SilentlyContinue\")",
+      "Bash(powershell -Command 'Get-Process | Where-Object { $_.Name -match '\\\\''Unreal|Crash|crashpad'\\\\'' } | Stop-Process -Force')",
+      "Bash(powershell -Command 'Get-Process | Where-Object { $_.Name -match '\\\\''Unreal|Crash|crashpad'\\\\'' } | Stop-Process -Force -ErrorAction SilentlyContinue')"
+    ]
+  }
+}

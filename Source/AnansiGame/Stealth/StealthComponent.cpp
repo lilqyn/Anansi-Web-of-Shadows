@@ -8,6 +8,7 @@
 #include "Engine/World.h"
 #include "Components/LightComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/DamageEvents.h"
 
 UStealthComponent::UStealthComponent()
 {

@@ -8,6 +8,8 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Core/CombatStats.h"
+#include "World/LootDrop.h"
 
 AEnemyBase::AEnemyBase()
 {
@@ -68,6 +70,9 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 		}
 		PlayHitReaction(HitDir);
 	}
+
+	// Hit flash
+	FlashHitColor();
 
 	// Death check
 	if (CurrentHealth <= 0.0f)
@@ -161,6 +166,15 @@ void AEnemyBase::HandleDeath(AController* Killer)
 	bIsDead = true;
 	OnDied.Broadcast(this);
 
+	// Track kill in combat stats
+	if (UGameInstance* GI = GetWorld()->GetGameInstance())
+	{
+		if (UCombatStatsSubsystem* Stats = GI->GetSubsystem<UCombatStatsSubsystem>())
+		{
+			Stats->RecordKill();
+		}
+	}
+
 	UE_LOG(LogAnansi, Log, TEXT("%s died"), *GetName());
 
 	// Death VFX
@@ -203,16 +217,42 @@ void AEnemyBase::HandleDeath(AController* Killer)
 
 void AEnemyBase::SpawnLoot()
 {
-	if (!LootDropClass)
+	// Always drop a random loot orb
+	ALootDrop::SpawnRandomLoot(this, GetActorLocation());
+
+	// Also spawn designer-configured loot if set
+	if (LootDropClass)
 	{
-		return;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		GetWorld()->SpawnActor<AActor>(LootDropClass, GetActorLocation() + FVector(0.0f, 0.0f, 50.0f),
+			FRotator::ZeroRotator, SpawnParams);
+	}
+}
+
+void AEnemyBase::FlashHitColor()
+{
+	// Use custom depth stencil to indicate hit — visible as a color change
+	// when post-process or the HUD is set up to render custom depth.
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		MeshComp->SetRenderCustomDepth(true);
+		MeshComp->SetCustomDepthStencilValue(255);
 	}
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	// Reset after a brief flash
+	GetWorld()->GetTimerManager().ClearTimer(HitFlashTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(HitFlashTimerHandle, this,
+		&AEnemyBase::ResetHitColor, 0.12f, false);
+}
 
-	GetWorld()->SpawnActor<AActor>(LootDropClass, GetActorLocation() + FVector(0.0f, 0.0f, 50.0f),
-		FRotator::ZeroRotator, SpawnParams);
+void AEnemyBase::ResetHitColor()
+{
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		MeshComp->SetRenderCustomDepth(false);
+		MeshComp->SetCustomDepthStencilValue(0);
+	}
 }
 
 void AEnemyBase::EnableRagdoll()

@@ -3,14 +3,23 @@
 #include "Player/AnansiPlayerController.h"
 #include "Player/AnansiCharacter.h"
 #include "Combat/CombatComponent.h"
+#include "Core/AnansiCheatManager.h"
 #include "AnansiGame.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 AAnansiPlayerController::AAnansiPlayerController()
 {
+	CheatClass = UAnansiCheatManager::StaticClass();
+}
+
+void AAnansiPlayerController::AddCheats(bool bForce)
+{
+	// Always add cheats in non-shipping builds for dev testing.
+	Super::AddCheats(true);
 }
 
 void AAnansiPlayerController::BeginPlay()
@@ -137,6 +146,19 @@ void AAnansiPlayerController::UpdateLockOnCamera(float DeltaTime)
 	}
 
 	AActor* Target = Anansi->CombatComponent->GetLockOnTarget();
+
+	// Camera boom adjustments based on lock-on state
+	if (Anansi->CameraBoom)
+	{
+		const float TargetArmLength = Target ? 350.0f : 400.0f;
+		const FVector TargetOffset = Target ? FVector(0, 50, 60) : FVector(0, 0, 0);
+
+		Anansi->CameraBoom->TargetArmLength = FMath::FInterpTo(
+			Anansi->CameraBoom->TargetArmLength, TargetArmLength, DeltaTime, 5.0f);
+		Anansi->CameraBoom->SocketOffset = FMath::VInterpTo(
+			Anansi->CameraBoom->SocketOffset, TargetOffset, DeltaTime, 5.0f);
+	}
+
 	if (!Target)
 	{
 		return;
@@ -149,8 +171,10 @@ void AAnansiPlayerController::UpdateLockOnCamera(float DeltaTime)
 	const FRotator CurrentRotation = GetControlRotation();
 	const FRotator SmoothedRotation = FMath::RInterpTo(CurrentRotation, LookAtRotation, DeltaTime, LockOnInterpSpeed);
 
-	// Only yaw — let the player retain pitch control.
-	SetControlRotation(FRotator(CurrentRotation.Pitch, SmoothedRotation.Yaw, 0.0f));
+	// Yaw and slight pitch towards target.
+	const float TargetPitch = FMath::Clamp(LookAtRotation.Pitch, -30.0f, 10.0f);
+	const float SmoothedPitch = FMath::FInterpTo(CurrentRotation.Pitch, TargetPitch, DeltaTime, 3.0f);
+	SetControlRotation(FRotator(SmoothedPitch, SmoothedRotation.Yaw, 0.0f));
 }
 
 // ---------------------------------------------------------------------------

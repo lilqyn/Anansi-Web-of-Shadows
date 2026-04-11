@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Components/CapsuleComponent.h"
 #include "EngineUtils.h"
 
 UTraversalComponent::UTraversalComponent()
@@ -439,7 +440,7 @@ bool UTraversalComponent::TryMantle()
 	}
 
 	// Move to top of obstacle
-	const FVector TargetLocation = HeightHit.ImpactPoint + FVector(0.0f, 0.0f, OwnerChar->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	const FVector TargetLocation = HeightHit.ImpactPoint + FVector::UpVector * OwnerChar->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	OwnerChar->SetActorLocation(TargetLocation, true);
 
 	SetTraversalState(ETraversalState::Mantling);

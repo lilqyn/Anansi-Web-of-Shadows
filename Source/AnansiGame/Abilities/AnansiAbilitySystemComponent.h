@@ -6,7 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "AnansiAbilitySystemComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWebEnergyChanged, float, NewEnergy, float, MaxEnergy);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnASCWebEnergyChanged, float, NewEnergy, float, MaxEnergy);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbilityActivationFailed, const UGameplayAbility*, Ability);
 
 /**
@@ -92,7 +92,7 @@ public:
 	// -------------------------------------------------------------------
 
 	UPROPERTY(BlueprintAssignable, Category = "Anansi|Abilities|Energy")
-	FOnWebEnergyChanged OnWebEnergyChanged;
+	FOnASCWebEnergyChanged OnASCWebEnergyChanged;
 
 	UPROPERTY(BlueprintAssignable, Category = "Anansi|Abilities")
 	FOnAbilityActivationFailed OnAbilityActivationFailed;

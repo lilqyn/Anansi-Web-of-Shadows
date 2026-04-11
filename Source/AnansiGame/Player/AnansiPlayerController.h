@@ -44,6 +44,9 @@ class ANANSIGAME_API AAnansiPlayerController : public APlayerController
 public:
 	AAnansiPlayerController();
 
+	/** Use our custom cheat manager for dev commands. */
+	virtual void AddCheats(bool bForce = false) override;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;

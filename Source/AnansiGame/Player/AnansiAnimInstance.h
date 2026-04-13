@@ -58,6 +58,18 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Anansi|Anim|Locomotion")
 	bool bIsWebSwinging = false;
 
+	/** True when moving at all (any ground speed above threshold). */
+	UPROPERTY(BlueprintReadOnly, Category = "Anansi|Anim|Locomotion")
+	bool bIsMoving = false;
+
+	/** True when running (faster than walk pace). */
+	UPROPERTY(BlueprintReadOnly, Category = "Anansi|Anim|Locomotion")
+	bool bIsRunning = false;
+
+	/** True when sprinting (fastest ground speed). */
+	UPROPERTY(BlueprintReadOnly, Category = "Anansi|Anim|Locomotion")
+	bool bIsSprinting = false;
+
 	// -----------------------------------------------------------------------
 	// Combat
 	// -----------------------------------------------------------------------

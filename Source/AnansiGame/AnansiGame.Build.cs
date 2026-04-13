@@ -27,7 +27,10 @@ public class AnansiGame : ModuleRules
 			"UMG",
 			"Slate",
 			"SlateCore",
-			"PhysicsCore"
+			"PhysicsCore",
+			"Json",
+			"JsonUtilities",
+			"AssetRegistry"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]

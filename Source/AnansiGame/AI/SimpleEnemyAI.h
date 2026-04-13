@@ -75,6 +75,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anansi|AI", meta = (ClampMin = "0.0"))
 	float PatrolWaitTime = 2.0f;
 
+	/** Health regen per second while idle (out of combat). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anansi|AI", meta = (ClampMin = "0.0"))
+	float IdleHealthRegen = 5.0f;
+
 	/** Alert this AI about a threat. Used for alert propagation. */
 	UFUNCTION(BlueprintCallable, Category = "Anansi|AI")
 	void AlertToThreat(AActor* Threat);

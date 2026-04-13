@@ -13,6 +13,8 @@
 #include "World/AnansiInteractable.h"
 #include "World/TimeOfDayManager.h"
 #include "Core/DifficultySettings.h"
+#include "Core/QuestSystem.h"
+#include "Core/PlayerProgression.h"
 #include "EngineUtils.h"
 #include "Engine/Canvas.h"
 #include "Engine/Font.h"
@@ -58,6 +60,9 @@ void AAnansiDevHUD::DrawHUD()
 	DrawComboTimerBar(Anansi);
 	DrawLockOnReticle(Anansi);
 	DrawDifficultyDisplay();
+	DrawQuestObjective();
+	DrawTutorialHint(DeltaTime);
+	DrawXPBar();
 
 	if (bShowEncounterComplete)
 	{
@@ -73,6 +78,11 @@ void AAnansiDevHUD::DrawHUD()
 	if (bShowPause)
 	{
 		DrawPauseScreen();
+	}
+
+	if (bShowCredits)
+	{
+		DrawCreditsScreen(DeltaTime);
 	}
 
 	// Screen flash overlay
@@ -381,6 +391,16 @@ void AAnansiDevHUD::DrawStateDisplay(AAnansiCharacter* Anansi)
 				FString::Printf(TEXT("Kills: %d  Hits: %d  Max Combo: %d"),
 					Stats->GetTotalKills(), Stats->GetTotalHits(), Stats->GetMaxCombo()),
 				30.0f, 60.0f);
+
+			// Kill streak indicator
+			if (Stats->GetKillStreak() >= 3)
+			{
+				Canvas->SetDrawColor(FColor(255, 150, 0));
+				Canvas->DrawText(GEngine->GetMediumFont(),
+					FString::Printf(TEXT("STREAK x%d (%.1fx)"),
+						Stats->GetKillStreak(), Stats->GetKillStreakMultiplier()),
+					Canvas->SizeX * 0.5f - 60.0f, Canvas->SizeY * 0.35f, 1.2f, 1.2f);
+			}
 		}
 	}
 }
@@ -1229,4 +1249,224 @@ void AAnansiDevHUD::FlashScreen(FLinearColor Color, float Duration)
 	ScreenFlashColor = Color;
 	ScreenFlashTimer = Duration;
 	ScreenFlashDuration = Duration;
+}
+
+// ---------------------------------------------------------------------------
+// Quest objective display (top-right corner)
+// ---------------------------------------------------------------------------
+
+void AAnansiDevHUD::DrawQuestObjective()
+{
+	UGameInstance* GI = GetWorld() ? GetWorld()->GetGameInstance() : nullptr;
+	if (!GI) return;
+
+	UQuestSystem* Quest = GI->GetSubsystem<UQuestSystem>();
+	if (!Quest || !Quest->HasActiveObjective()) return;
+
+	const FQuestObjective& Obj = Quest->GetCurrentObjective();
+
+	const float BoxWidth = 280.0f;
+	const float BoxHeight = 55.0f;
+	const float X = Canvas->SizeX - BoxWidth - 15.0f;
+	const float Y = 250.0f;
+
+	// Background
+	DrawRect(FLinearColor(0.05f, 0.05f, 0.08f, 0.7f), X, Y, BoxWidth, BoxHeight);
+
+	// Border — green if complete, gold otherwise
+	const FLinearColor BorderColor = Obj.bComplete
+		? FLinearColor(0.1f, 0.9f, 0.2f)
+		: FLinearColor(0.8f, 0.6f, 0.1f);
+	DrawLine(X, Y, X + BoxWidth, Y, BorderColor);
+	DrawLine(X + BoxWidth, Y, X + BoxWidth, Y + BoxHeight, BorderColor);
+	DrawLine(X, Y + BoxHeight, X + BoxWidth, Y + BoxHeight, BorderColor);
+	DrawLine(X, Y, X, Y + BoxHeight, BorderColor);
+
+	// "OBJECTIVE" label
+	Canvas->SetDrawColor(FColor(180, 180, 180));
+	Canvas->DrawText(GEngine->GetSmallFont(), TEXT("OBJECTIVE"), X + 8, Y + 4, 0.85f, 0.85f);
+
+	// Objective text
+	Canvas->SetDrawColor(FColor::White);
+	Canvas->DrawText(GEngine->GetMediumFont(), Obj.DisplayText.ToString(), X + 8, Y + 18, 1.0f, 1.0f);
+
+	// Progress counter
+	Canvas->SetDrawColor(Obj.bComplete ? FColor(50, 255, 50) : FColor(255, 200, 80));
+	const FString Progress = FString::Printf(TEXT("%d / %d"), Obj.CurrentCount, Obj.TargetCount);
+	Canvas->DrawText(GEngine->GetSmallFont(), Progress, X + BoxWidth - 55, Y + 38, 0.9f, 0.9f);
+
+	// Progress bar
+	const float BarY = Y + BoxHeight - 4;
+	const float BarW = BoxWidth - 16;
+	DrawRect(FLinearColor(0.1f, 0.1f, 0.1f, 0.7f), X + 8, BarY, BarW, 2);
+	if (Obj.TargetCount > 0)
+	{
+		const float Pct = static_cast<float>(Obj.CurrentCount) / Obj.TargetCount;
+		DrawRect(FLinearColor(0.9f, 0.7f, 0.1f, 0.9f), X + 8, BarY, BarW * Pct, 2);
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Tutorial hint popup (bottom-center)
+// ---------------------------------------------------------------------------
+
+void AAnansiDevHUD::ShowTutorial(const FString& Title, const FString& Body, float Duration)
+{
+	TutorialTitle = Title;
+	TutorialBody = Body;
+	TutorialTimer = Duration;
+}
+
+void AAnansiDevHUD::DismissTutorial()
+{
+	TutorialTimer = 0.0f;
+	TutorialTitle.Empty();
+	TutorialBody.Empty();
+}
+
+void AAnansiDevHUD::DrawTutorialHint(float DeltaTime)
+{
+	if (TutorialTimer <= 0.0f || TutorialTitle.IsEmpty()) return;
+
+	TutorialTimer -= DeltaTime;
+
+	const float BoxWidth = 450.0f;
+	const float BoxHeight = 80.0f;
+	const float CenterX = Canvas->SizeX * 0.5f;
+	const float X = CenterX - BoxWidth * 0.5f;
+	const float Y = Canvas->SizeY - BoxHeight - 180.0f;
+
+	const float Alpha = FMath::Clamp(TutorialTimer / 0.5f, 0.0f, 1.0f);
+
+	// Background
+	DrawRect(FLinearColor(0.05f, 0.08f, 0.15f, 0.85f * Alpha), X, Y, BoxWidth, BoxHeight);
+
+	// Border
+	const FLinearColor BorderColor(0.3f, 0.7f, 1.0f, Alpha);
+	DrawLine(X, Y, X + BoxWidth, Y, BorderColor);
+	DrawLine(X + BoxWidth, Y, X + BoxWidth, Y + BoxHeight, BorderColor);
+	DrawLine(X, Y + BoxHeight, X + BoxWidth, Y + BoxHeight, BorderColor);
+	DrawLine(X, Y, X, Y + BoxHeight, BorderColor);
+
+	// Title
+	Canvas->SetDrawColor(FColor(120, 200, 255));
+	Canvas->DrawText(GEngine->GetMediumFont(), TutorialTitle, X + 15, Y + 10, 1.1f, 1.1f);
+
+	// Body
+	Canvas->SetDrawColor(FColor::White);
+	Canvas->DrawText(GEngine->GetSmallFont(), TutorialBody, X + 15, Y + 38, 0.95f, 0.95f);
+}
+
+// ---------------------------------------------------------------------------
+// Credits screen
+// ---------------------------------------------------------------------------
+
+void AAnansiDevHUD::ShowCredits()
+{
+	bShowCredits = true;
+	CreditsScrollY = Canvas ? Canvas->SizeY : 720.0f;
+}
+
+void AAnansiDevHUD::DrawCreditsScreen(float DeltaTime)
+{
+	// Dark background
+	DrawRect(FLinearColor(0, 0, 0, 0.9f), 0, 0, Canvas->SizeX, Canvas->SizeY);
+
+	// Scroll up
+	CreditsScrollY -= 40.0f * DeltaTime;
+
+	const float CenterX = Canvas->SizeX * 0.5f;
+	float Y = CreditsScrollY;
+
+	static const TArray<TPair<FString, FColor>> CreditLines = {
+		{TEXT("ANANSI: WEB OF SHADOWS"), FColor(255, 200, 50)},
+		{TEXT(""), FColor::White},
+		{TEXT("A Third-Person Action-Adventure"), FColor(200, 200, 200)},
+		{TEXT("Inspired by Akan Folklore"), FColor(200, 200, 200)},
+		{TEXT(""), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT("DESIGN & PROGRAMMING"), FColor(255, 180, 80)},
+		{TEXT("Peter"), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT("GAMEPLAY SYSTEMS"), FColor(255, 180, 80)},
+		{TEXT("Combat, Traversal, Stealth"), FColor::White},
+		{TEXT("5 GAS Abilities, AI, Narrative"), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT("ENEMY DESIGN"), FColor(255, 180, 80)},
+		{TEXT("Palace Guards, Shield Guards"), FColor::White},
+		{TEXT("Ranged Zealots, Turrets"), FColor::White},
+		{TEXT("Captain of the Mask"), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT("BUILT ON"), FColor(255, 180, 80)},
+		{TEXT("Unreal Engine 5.7"), FColor::White},
+		{TEXT("C++ (200+ source files)"), FColor::White},
+		{TEXT("60+ gameplay systems"), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT("SPECIAL THANKS"), FColor(255, 180, 80)},
+		{TEXT("Claude Opus 4.6"), FColor::White},
+		{TEXT("Mixamo (character animations)"), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT(""), FColor::White},
+		{TEXT("THE STORY WEAVES ON..."), FColor(255, 200, 50)},
+		{TEXT(""), FColor::White},
+		{TEXT("[Press ESC to return]"), FColor(120, 120, 120)},
+	};
+
+	for (const auto& Pair : CreditLines)
+	{
+		if (Y > -40 && Y < Canvas->SizeY + 40)
+		{
+			Canvas->SetDrawColor(Pair.Value);
+			const float Width = Pair.Key.Len() * 8.0f;
+			Canvas->DrawText(GEngine->GetMediumFont(), Pair.Key, CenterX - Width * 0.5f, Y, 1.2f, 1.2f);
+		}
+		Y += 35.0f;
+	}
+
+	// Loop scroll
+	if (Y < 0)
+	{
+		CreditsScrollY = Canvas->SizeY;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// XP bar (top-left, below world clock)
+// ---------------------------------------------------------------------------
+
+void AAnansiDevHUD::DrawXPBar()
+{
+	UGameInstance* GI = GetWorld() ? GetWorld()->GetGameInstance() : nullptr;
+	if (!GI) return;
+
+	UPlayerProgression* Prog = GI->GetSubsystem<UPlayerProgression>();
+	if (!Prog) return;
+
+	const float X = 30.0f;
+	const float Y = 123.0f;
+	const float Width = 200.0f;
+	const float Height = 6.0f;
+
+	// Label
+	Canvas->SetDrawColor(FColor(200, 180, 255));
+	const FString LevelText = FString::Printf(TEXT("Lv.%d  (%d XP)"),
+		Prog->GetCurrentLevel(), Prog->GetCurrentXP());
+	Canvas->DrawText(GEngine->GetSmallFont(), LevelText, X, Y - 12, 0.85f, 0.85f);
+
+	// XP bar
+	DrawRect(FLinearColor(0.1f, 0.1f, 0.1f, 0.7f), X, Y, Width, Height);
+	DrawRect(FLinearColor(0.7f, 0.4f, 1.0f, 0.9f), X, Y, Width * Prog->GetLevelProgress(), Height);
+
+	// Upgrade points
+	if (Prog->GetUpgradePoints() > 0)
+	{
+		Canvas->SetDrawColor(FColor(255, 200, 50));
+		Canvas->DrawText(GEngine->GetSmallFont(),
+			FString::Printf(TEXT("+%d SP"), Prog->GetUpgradePoints()),
+			X + Width + 8, Y - 5, 0.9f, 0.9f);
+	}
 }

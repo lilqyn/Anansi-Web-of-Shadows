@@ -72,6 +72,18 @@ void USimpleEnemyAI::TickIdle(float DeltaTime)
 		TargetPlayer = FindPlayer();
 	}
 
+	// Regen health while idle
+	if (IdleHealthRegen > 0.0f)
+	{
+		if (AEnemyBase* Enemy = Cast<AEnemyBase>(GetOwner()))
+		{
+			if (Enemy->GetHealthPercent() < 1.0f)
+			{
+				Enemy->Heal(IdleHealthRegen * DeltaTime);
+			}
+		}
+	}
+
 	// Patrol while idle
 	if (bEnablePatrol && (!TargetPlayer.IsValid() || GetDistanceToTarget() > DetectionRange))
 	{

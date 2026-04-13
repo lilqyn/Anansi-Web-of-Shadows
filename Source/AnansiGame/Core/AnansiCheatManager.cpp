@@ -21,6 +21,23 @@
 #include "Traversal/Zipline.h"
 #include "World/MovingPlatform.h"
 #include "World/BreakableObject.h"
+#include "World/BouncePad.h"
+#include "World/GravityZone.h"
+#include "AI/EnemyTurret.h"
+#include "World/SpawnerPortal.h"
+#include "World/TrapPlate.h"
+#include "World/PowerupPickup.h"
+#include "World/WaveSurvival.h"
+#include "Core/AnansiSaveManager.h"
+#include "Core/QuestSystem.h"
+#include "World/DestructibleWall.h"
+#include "Core/AchievementSystem.h"
+#include "World/LootChest.h"
+#include "World/KeyPickup.h"
+#include "Combat/StatusEffectComponent.h"
+#include "Core/PlayerProgression.h"
+#include "AI/AllyCompanion.h"
+#include "Combat/MeleeDamageDealer.h"
 #include "Core/DifficultySettings.h"
 #include "EngineUtils.h"
 #include "Combat/CombatComponent.h"
@@ -571,4 +588,449 @@ void UAnansiCheatManager::Anansi_SpawnCrates(int32 Count)
 	}
 
 	UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned %d breakable crates"), Count);
+}
+
+void UAnansiCheatManager::Anansi_SpawnBouncePad()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 300.0f);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	GetWorld()->SpawnActor<ABouncePad>(ABouncePad::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned bounce pad"));
+}
+
+void UAnansiCheatManager::Anansi_SpawnTurret()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 800.0f);
+	const FRotator Rot = (Anansi->GetActorLocation() - Loc).Rotation();
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	GetWorld()->SpawnActor<AEnemyTurret>(AEnemyTurret::StaticClass(), Loc, Rot, Params);
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned turret enemy"));
+}
+
+void UAnansiCheatManager::Anansi_SpawnGravityZone(float Scale)
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 400.0f);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AGravityZone* Zone = GetWorld()->SpawnActor<AGravityZone>(
+		AGravityZone::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+	if (Zone)
+	{
+		Zone->GravityScale = Scale;
+		UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned gravity zone (scale: %.1f)"), Scale);
+	}
+}
+
+void UAnansiCheatManager::Anansi_SpawnPortal()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 600.0f);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ASpawnerPortal* Portal = GetWorld()->SpawnActor<ASpawnerPortal>(
+		ASpawnerPortal::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+	if (Portal)
+	{
+		UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned enemy portal (destroy it to stop spawns!)"));
+	}
+}
+
+void UAnansiCheatManager::Anansi_SpawnTrap()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 300.0f);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	GetWorld()->SpawnActor<ATrapPlate>(ATrapPlate::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned trap plate"));
+}
+
+void UAnansiCheatManager::Anansi_SpawnPowerup()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 300.0f) + FVector(0, 0, 50);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	GetWorld()->SpawnActor<APowerupPickup>(APowerupPickup::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned speed boost powerup"));
+}
+
+void UAnansiCheatManager::Anansi_MeshSetup()
+{
+	UE_LOG(LogAnansi, Log, TEXT(""));
+	UE_LOG(LogAnansi, Log, TEXT("=== CHARACTER MESH SETUP ==="));
+	UE_LOG(LogAnansi, Log, TEXT("1. Go to https://www.mixamo.com (free Adobe account)"));
+	UE_LOG(LogAnansi, Log, TEXT("2. Pick a character > Download as FBX"));
+	UE_LOG(LogAnansi, Log, TEXT("3. In UE Editor: Content Browser > /Game/Characters/Kweku/Meshes/"));
+	UE_LOG(LogAnansi, Log, TEXT("4. Right-click > Import > select the FBX file"));
+	UE_LOG(LogAnansi, Log, TEXT("5. Name it 'SK_Kweku'"));
+	UE_LOG(LogAnansi, Log, TEXT("6. Restart Play — mesh auto-loads!"));
+	UE_LOG(LogAnansi, Log, TEXT(""));
+	UE_LOG(LogAnansi, Log, TEXT("=== ANIMATIONS ==="));
+	UE_LOG(LogAnansi, Log, TEXT("Download from Mixamo (same character, FBX, With Skin):"));
+	UE_LOG(LogAnansi, Log, TEXT("  - Idle, Walking, Running, Jump, Fall, Land"));
+	UE_LOG(LogAnansi, Log, TEXT("  - Punch x3 (light combo), Heavy Slash, Roll"));
+	UE_LOG(LogAnansi, Log, TEXT("Import into /Game/Characters/Kweku/Animations/"));
+	UE_LOG(LogAnansi, Log, TEXT("Then create Animation Blueprint (right-click > Animation > Animation Blueprint)"));
+	UE_LOG(LogAnansi, Log, TEXT("Name it 'ABP_Kweku' — it auto-loads!"));
+	UE_LOG(LogAnansi, Log, TEXT(""));
+	UE_LOG(LogAnansi, Log, TEXT("=== SOUNDS ==="));
+	UE_LOG(LogAnansi, Log, TEXT("Import .wav files to these exact paths:"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/Combat/Hit"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/Combat/Whoosh"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/Combat/Parry"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/Combat/Death"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/Traversal/Jump"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/Traversal/Land"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/Traversal/WebShoot"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/UI/Pickup"));
+	UE_LOG(LogAnansi, Log, TEXT("  /Game/Audio/SFX/UI/Checkpoint"));
+	UE_LOG(LogAnansi, Log, TEXT("They auto-play when imported!"));
+	UE_LOG(LogAnansi, Log, TEXT("============================"));
+}
+
+void UAnansiCheatManager::Anansi_FullArena()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	// Build the arena
+	Anansi_BuildArena();
+
+	// Add gameplay elements
+	Anansi_SpawnCheckpoint();
+	Anansi_SpawnMixedWave();
+	Anansi_SpawnCrates(8);
+	Anansi_SpawnFragment();
+	Anansi_SpawnBouncePad();
+	Anansi_SpawnPowerup();
+
+	// Spawn a portal at distance
+	const FVector PortalLoc = Anansi->GetActorLocation() + FVector(2000, 0, 0);
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	GetWorld()->SpawnActor<ASpawnerPortal>(ASpawnerPortal::StaticClass(), PortalLoc, FRotator::ZeroRotator, Params);
+
+	// Turret on a platform
+	const FVector TurretLoc = Anansi->GetActorLocation() + FVector(-1500, 500, 300);
+	GetWorld()->SpawnActor<AEnemyTurret>(AEnemyTurret::StaticClass(), TurretLoc,
+		(Anansi->GetActorLocation() - TurretLoc).Rotation(), Params);
+
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Full arena spawned — arena + enemies + crates + fragment + portal + turret + powerup"));
+}
+
+void UAnansiCheatManager::Anansi_Save(int32 Slot)
+{
+	if (UGameInstance* GI = GetWorld()->GetGameInstance())
+	{
+		if (UAnansiSaveManager* SM = GI->GetSubsystem<UAnansiSaveManager>())
+		{
+			if (SM->SaveGame(Slot))
+			{
+				if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+				{
+					if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+					{
+						HUD->ShowToast(FString::Printf(TEXT("Saved to slot %d"), Slot), FColor(100, 255, 100));
+					}
+				}
+			}
+		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_Load(int32 Slot)
+{
+	if (UGameInstance* GI = GetWorld()->GetGameInstance())
+	{
+		if (UAnansiSaveManager* SM = GI->GetSubsystem<UAnansiSaveManager>())
+		{
+			if (SM->LoadGame(Slot))
+			{
+				if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+				{
+					if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+					{
+						HUD->ShowToast(FString::Printf(TEXT("Loaded slot %d"), Slot), FColor(100, 200, 255));
+					}
+				}
+			}
+		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_Survival()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AWaveSurvival* Survival = GetWorld()->SpawnActor<AWaveSurvival>(
+		AWaveSurvival::StaticClass(), Anansi->GetActorLocation(), FRotator::ZeroRotator, Params);
+
+	if (Survival)
+	{
+		Survival->StartSurvival();
+	}
+}
+
+void UAnansiCheatManager::Anansi_Credits()
+{
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+		{
+			HUD->ShowCredits();
+		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_QuestKill(int32 Count)
+{
+	if (UGameInstance* GI = GetWorld()->GetGameInstance())
+	{
+		if (UQuestSystem* Quest = GI->GetSubsystem<UQuestSystem>())
+		{
+			FQuestObjective Obj;
+			Obj.DisplayText = FText::FromString(FString::Printf(TEXT("Defeat %d enemies"), Count));
+			Obj.Type = EObjectiveType::KillEnemies;
+			Obj.TargetCount = Count;
+			Quest->SetObjective(Obj);
+		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_QuestCollect(int32 Count)
+{
+	if (UGameInstance* GI = GetWorld()->GetGameInstance())
+	{
+		if (UQuestSystem* Quest = GI->GetSubsystem<UQuestSystem>())
+		{
+			FQuestObjective Obj;
+			Obj.DisplayText = FText::FromString(FString::Printf(TEXT("Collect %d story fragments"), Count));
+			Obj.Type = EObjectiveType::CollectFragments;
+			Obj.TargetCount = Count;
+			Quest->SetObjective(Obj);
+		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_SpawnWeakWall()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 500.0f);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ADestructibleWall* Wall = GetWorld()->SpawnActor<ADestructibleWall>(
+		ADestructibleWall::StaticClass(), Loc, Anansi->GetActorRotation(), Params);
+
+	if (Wall)
+	{
+		UE_LOG(LogAnansi, Log, TEXT("Cheat: Destructible wall spawned (break with heavy attacks)"));
+	}
+}
+
+void UAnansiCheatManager::Anansi_Tutorial()
+{
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+		{
+			HUD->ShowTutorial(
+				TEXT("COMBAT BASICS"),
+				TEXT("[LMB] Light Attack   [RMB] Heavy Attack   [Q] Parry   [Alt] Dodge"),
+				6.0f);
+		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_UnlockAchievement(FString ID)
+{
+	if (UGameInstance* GI = GetWorld()->GetGameInstance())
+	{
+		if (UAchievementSystem* Ach = GI->GetSubsystem<UAchievementSystem>())
+		{
+			Ach->UnlockAchievement(FName(*ID));
+		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_PhotoMode()
+{
+	bPhotoMode = !bPhotoMode;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	// Freeze/unfreeze time
+	UGameplayStatics::SetGlobalTimeDilation(World, bPhotoMode ? 0.0f : 1.0f);
+
+	// Show toast
+	if (APlayerController* PC = World->GetFirstPlayerController())
+	{
+		if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+		{
+			HUD->ShowToast(bPhotoMode ? TEXT("PHOTO MODE ON") : TEXT("PHOTO MODE OFF"),
+				FColor(200, 200, 255));
+		}
+	}
+
+	UE_LOG(LogAnansi, Log, TEXT("Photo mode: %s"), bPhotoMode ? TEXT("ON") : TEXT("OFF"));
+}
+
+void UAnansiCheatManager::Anansi_SpawnChest(bool bLocked)
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 250.0f);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ALootChest* Chest = GetWorld()->SpawnActor<ALootChest>(
+		ALootChest::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+
+	if (Chest)
+	{
+		Chest->bLocked = bLocked;
+		UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned %s chest"), bLocked ? TEXT("locked") : TEXT("unlocked"));
+	}
+}
+
+void UAnansiCheatManager::Anansi_SpawnKey()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 200.0f) + FVector(0, 0, 50);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	GetWorld()->SpawnActor<AKeyPickup>(AKeyPickup::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned brass key"));
+}
+
+void UAnansiCheatManager::Anansi_BurnEnemies()
+{
+	TArray<AActor*> Enemies;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Enemy"), Enemies);
+
+	int32 Count = 0;
+	for (AActor* Enemy : Enemies)
+	{
+		if (!Enemy) continue;
+
+		// Add status effect component if it doesn't exist
+		UStatusEffectComponent* SEC = Enemy->FindComponentByClass<UStatusEffectComponent>();
+		if (!SEC)
+		{
+			SEC = NewObject<UStatusEffectComponent>(Enemy, TEXT("StatusEffects"));
+			SEC->RegisterComponent();
+		}
+
+		SEC->ApplyEffect(EStatusEffectType::Burn, 5.0f, 4.0f);
+		Count++;
+	}
+
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Burning %d enemies"), Count);
+}
+
+void UAnansiCheatManager::Anansi_AwardXP(int32 Amount)
+{
+	if (UGameInstance* GI = GetWorld()->GetGameInstance())
+	{
+		if (UPlayerProgression* Prog = GI->GetSubsystem<UPlayerProgression>())
+		{
+			Prog->AwardXP(Amount);
+			UE_LOG(LogAnansi, Log, TEXT("Cheat: Awarded %d XP"), Amount);
+		}
+	}
+}
+
+void UAnansiCheatManager::Anansi_SpawnAlly()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi) return;
+
+	const FVector Loc = GetSpawnLocationInFront(Anansi, 300.0f);
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	AAllyCompanion* Ally = GetWorld()->SpawnActor<AAllyCompanion>(
+		AAllyCompanion::StaticClass(), Loc, Anansi->GetActorRotation(), Params);
+
+	if (Ally)
+	{
+		UE_LOG(LogAnansi, Log, TEXT("Cheat: Spawned ally companion"));
+	}
+}
+
+void UAnansiCheatManager::Anansi_RageMode()
+{
+	AAnansiCharacter* Anansi = GetAnansi(this);
+	if (!Anansi || !Anansi->MeleeDamage) return;
+
+	const float OriginalDamage = Anansi->MeleeDamage->BaseDamage;
+	Anansi->MeleeDamage->BaseDamage *= 2.0f;
+
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+		{
+			HUD->ShowToast(TEXT("RAGE MODE! 2x damage for 10s"), FColor(255, 80, 80));
+			HUD->FlashScreen(FLinearColor(1.0f, 0.2f, 0.1f), 0.3f);
+		}
+	}
+
+	// Revert after 10 seconds
+	FTimerHandle RageTimer;
+	GetWorld()->GetTimerManager().SetTimer(RageTimer,
+		FTimerDelegate::CreateLambda([Anansi, OriginalDamage]()
+		{
+			if (Anansi && Anansi->MeleeDamage)
+			{
+				Anansi->MeleeDamage->BaseDamage = OriginalDamage;
+				UE_LOG(LogAnansi, Log, TEXT("Rage mode ended"));
+			}
+		}), 10.0f, false);
+
+	UE_LOG(LogAnansi, Log, TEXT("Cheat: Rage mode activated (2x damage)"));
 }

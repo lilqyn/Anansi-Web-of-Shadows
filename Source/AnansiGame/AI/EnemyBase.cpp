@@ -10,6 +10,10 @@
 #include "TimerManager.h"
 #include "Core/CombatStats.h"
 #include "World/LootDrop.h"
+#include "Core/SoundManager.h"
+#include "Core/QuestSystem.h"
+#include "Core/AchievementSystem.h"
+#include "Core/PlayerProgression.h"
 
 AEnemyBase::AEnemyBase()
 {
@@ -109,6 +113,18 @@ void AEnemyBase::SetAwarenessState(EEnemyAwareness NewState)
 // Damage responses
 // ---------------------------------------------------------------------------
 
+void AEnemyBase::Heal(float Amount)
+{
+	if (bIsDead || Amount <= 0.0f) return;
+
+	const float OldHealth = CurrentHealth;
+	CurrentHealth = FMath::Min(CurrentHealth + Amount, MaxHealth);
+	if (CurrentHealth != OldHealth)
+	{
+		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+	}
+}
+
 void AEnemyBase::PlayHitReaction(const FVector& HitDirection)
 {
 	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
@@ -166,13 +182,42 @@ void AEnemyBase::HandleDeath(AController* Killer)
 	bIsDead = true;
 	OnDied.Broadcast(this);
 
-	// Track kill in combat stats
+	// Track kill in combat stats (with streak tracking)
 	if (UGameInstance* GI = GetWorld()->GetGameInstance())
 	{
 		if (UCombatStatsSubsystem* Stats = GI->GetSubsystem<UCombatStatsSubsystem>())
 		{
-			Stats->RecordKill();
+			Stats->RecordStreakKill();
+
+			// Check kill-count achievements
+			if (UAchievementSystem* Ach = GI->GetSubsystem<UAchievementSystem>())
+			{
+				Ach->CheckKillCount(Stats->GetTotalKills());
+				Ach->CheckCombo(Stats->GetMaxCombo());
+			}
+
+			// Award XP
+			if (UPlayerProgression* Prog = GI->GetSubsystem<UPlayerProgression>())
+			{
+				Prog->AwardXP(25);
+			}
 		}
+
+		// Advance kill-based quest objectives
+		if (UQuestSystem* Quest = GI->GetSubsystem<UQuestSystem>())
+		{
+			if (Quest->HasActiveObjective() &&
+				Quest->GetCurrentObjective().Type == EObjectiveType::KillEnemies)
+			{
+				Quest->ProgressObjective(1);
+			}
+		}
+	}
+
+	// Play death sound
+	if (USoundManager* SM = GetWorld()->GetSubsystem<USoundManager>())
+	{
+		SM->PlayDeathSound(GetActorLocation());
 	}
 
 	UE_LOG(LogAnansi, Log, TEXT("%s died"), *GetName());

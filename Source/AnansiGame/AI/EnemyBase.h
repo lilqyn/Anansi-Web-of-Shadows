@@ -73,6 +73,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Anansi|Enemy")
 	float GetHealthPercent() const { return MaxHealth > 0.0f ? CurrentHealth / MaxHealth : 0.0f; }
 
+	/** Restore health (clamped to max). */
+	UFUNCTION(BlueprintCallable, Category = "Anansi|Enemy")
+	void Heal(float Amount);
+
 	// -------------------------------------------------------------------
 	// Enemy identity
 	// -------------------------------------------------------------------

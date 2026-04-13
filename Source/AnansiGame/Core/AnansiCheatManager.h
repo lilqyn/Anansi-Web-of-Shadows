@@ -130,6 +130,103 @@ public:
 	UFUNCTION(Exec)
 	void Anansi_SpawnCrates(int32 Count = 5);
 
+	/** Spawn a bounce pad in front of the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnBouncePad();
+
+	/** Spawn a turret enemy in front of the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnTurret();
+
+	/** Spawn a gravity zone in front of the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnGravityZone(float Scale = 0.3f);
+
+	/** Spawn an enemy spawner portal. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnPortal();
+
+	/** Spawn a trap plate in front of the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnTrap();
+
+	/** Spawn a speed boost powerup. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnPowerup();
+
+	/** Print instructions for importing character mesh from Mixamo. */
+	UFUNCTION(Exec)
+	void Anansi_MeshSetup();
+
+	/** Spawn a complete gameplay arena with all actor types. */
+	UFUNCTION(Exec)
+	void Anansi_FullArena();
+
+	/** Save current progress to a slot. */
+	UFUNCTION(Exec)
+	void Anansi_Save(int32 Slot = 0);
+
+	/** Load progress from a slot. */
+	UFUNCTION(Exec)
+	void Anansi_Load(int32 Slot = 0);
+
+	/** Start wave survival mode. */
+	UFUNCTION(Exec)
+	void Anansi_Survival();
+
+	/** Show the credits screen. */
+	UFUNCTION(Exec)
+	void Anansi_Credits();
+
+	/** Start a kill X enemies quest. */
+	UFUNCTION(Exec)
+	void Anansi_QuestKill(int32 Count = 5);
+
+	/** Start a collect X fragments quest. */
+	UFUNCTION(Exec)
+	void Anansi_QuestCollect(int32 Count = 3);
+
+	/** Spawn a destructible wall in front of the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnWeakWall();
+
+	/** Show a tutorial hint popup. */
+	UFUNCTION(Exec)
+	void Anansi_Tutorial();
+
+	/** Unlock an achievement by name. */
+	UFUNCTION(Exec)
+	void Anansi_UnlockAchievement(FString ID = TEXT("FirstBlood"));
+
+	/** Toggle photo mode (freezes game). */
+	UFUNCTION(Exec)
+	void Anansi_PhotoMode();
+
+	/** Spawn a loot chest in front of the player. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnChest(bool bLocked = false);
+
+	/** Spawn a key pickup. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnKey();
+
+	/** Apply burn status effect to all nearby enemies. */
+	UFUNCTION(Exec)
+	void Anansi_BurnEnemies();
+
+	/** Award XP to the player. */
+	UFUNCTION(Exec)
+	void Anansi_AwardXP(int32 Amount = 100);
+
+	/** Spawn an ally companion. */
+	UFUNCTION(Exec)
+	void Anansi_SpawnAlly();
+
+	/** Toggle rage mode (2x damage for 10 seconds). */
+	UFUNCTION(Exec)
+	void Anansi_RageMode();
+
 private:
 	bool bGodMode = false;
+	bool bPhotoMode = false;
 };

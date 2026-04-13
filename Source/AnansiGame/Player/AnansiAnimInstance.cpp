@@ -55,6 +55,11 @@ void UAnansiAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsFalling = CMC->IsFalling() && Velocity.Z <= 0.0f;
 	bIsCrouching = CMC->IsCrouching();
 
+	// Speed-based movement states
+	bIsMoving    = MovementSpeed > 10.0f && !CMC->IsFalling();
+	bIsRunning   = MovementSpeed > 300.0f && !CMC->IsFalling();
+	bIsSprinting = MovementSpeed > 700.0f && !CMC->IsFalling();
+
 	// -- High-level state ---------------------------------------------------
 	CharacterState = Character->GetCharacterState();
 	bIsAlive = Character->IsAlive();

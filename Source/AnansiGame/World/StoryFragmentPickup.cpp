@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/AnansiDevHUD.h"
+#include "Core/QuestSystem.h"
 
 AStoryFragmentPickup::AStoryFragmentPickup()
 {
@@ -46,6 +47,16 @@ void AStoryFragmentPickup::OnInteract(ACharacter* InteractingCharacter)
 		if (UStoryFragmentSystem* FragSystem = GI->GetSubsystem<UStoryFragmentSystem>())
 		{
 			FragSystem->CollectFragment(FragmentID);
+		}
+
+		// Advance fragment-based quest objectives
+		if (UQuestSystem* Quest = GI->GetSubsystem<UQuestSystem>())
+		{
+			if (Quest->HasActiveObjective() &&
+				Quest->GetCurrentObjective().Type == EObjectiveType::CollectFragments)
+			{
+				Quest->ProgressObjective(1);
+			}
 		}
 	}
 

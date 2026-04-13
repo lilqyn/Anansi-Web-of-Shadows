@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "Player/AnansiCharacter.h"
 #include "Core/CombatStats.h"
+#include "Core/SoundManager.h"
 
 UMeleeDamageDealer::UMeleeDamageDealer()
 {
@@ -71,6 +72,12 @@ int32 UMeleeDamageDealer::FireAttack(float DamageOverride)
 		}
 
 		HitCount++;
+
+		// Play hit sound
+		if (USoundManager* SM = GetWorld()->GetSubsystem<USoundManager>())
+		{
+			SM->PlayHitSound(Hit.ImpactPoint);
+		}
 
 		// Restore small amount of web energy per hit
 		if (AAnansiCharacter* Anansi = Cast<AAnansiCharacter>(Owner))

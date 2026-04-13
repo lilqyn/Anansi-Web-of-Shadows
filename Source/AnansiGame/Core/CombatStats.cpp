@@ -55,6 +55,38 @@ void UCombatStatsSubsystem::ResetStats()
 	EncounterStartTime = 0.0f;
 }
 
+void UCombatStatsSubsystem::RecordStreakKill()
+{
+	RecordKill();
+
+	UWorld* World = GetWorld();
+	const float CurrentTime = World ? World->GetTimeSeconds() : 0.0f;
+
+	if (CurrentTime - KillStreakTimer <= KillStreakWindow)
+	{
+		KillStreak++;
+	}
+	else
+	{
+		KillStreak = 1;
+	}
+
+	KillStreakTimer = CurrentTime;
+
+	if (KillStreak >= 3)
+	{
+		UE_LOG(LogAnansi, Log, TEXT("Kill Streak: %d! (x%.1f damage)"), KillStreak, GetKillStreakMultiplier());
+	}
+}
+
+float UCombatStatsSubsystem::GetKillStreakMultiplier() const
+{
+	if (KillStreak < 3) return 1.0f;
+	if (KillStreak < 5) return 1.25f;
+	if (KillStreak < 8) return 1.5f;
+	return 2.0f; // 8+ kills = double damage
+}
+
 FString UCombatStatsSubsystem::GetPerformanceGrade() const
 {
 	// Score based on: kills, combos, parries, damage efficiency

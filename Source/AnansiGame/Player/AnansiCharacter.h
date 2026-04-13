@@ -405,6 +405,9 @@ private:
 	/** Auto-load Input Actions and Mapping Context from /Game/Input/ if not set. */
 	void AutoLoadInputAssets();
 
+	/** Try to find and apply a skeletal mesh from known content paths. */
+	void TryLoadSkeletalMesh();
+
 	// -- Wall-run state -----------------------------------------------------
 	float WallRunTimer = 0.0f;
 	FVector WallRunNormal = FVector::ZeroVector;
@@ -442,6 +445,23 @@ private:
 	/** Stamina cost per second while sprinting. */
 	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Movement", meta = (ClampMin = "0.0"))
 	float SprintStaminaCostPerSecond = 12.0f;
+
+	// -- Combat polish ------------------------------------------------------
+
+	/** Auto-aim: rotate toward nearest enemy when attacking. */
+	void SnapToNearestEnemy(float MaxAngle = 60.0f, float MaxRange = 400.0f);
+
+	/** Coyote time: allow jumping briefly after leaving a ledge. */
+	float CoyoteTimeRemaining = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Movement")
+	float CoyoteTimeDuration = 0.15f;
+
+	bool bWasGroundedLastFrame = false;
+
+	/** Health gate: prevent one-shot kills from full health. */
+	UPROPERTY(EditDefaultsOnly, Category = "Anansi|Stats")
+	bool bHealthGateEnabled = true;
 
 	// -- Wall slide ---------------------------------------------------------
 	bool bIsWallSliding = false;

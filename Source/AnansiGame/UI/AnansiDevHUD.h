@@ -39,6 +39,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
 	void FlashScreen(FLinearColor Color = FLinearColor::White, float Duration = 0.15f);
 
+	/** Show a tutorial hint (stays until dismissed or time expires). */
+	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
+	void ShowTutorial(const FString& Title, const FString& Body, float Duration = 6.0f);
+
+	/** Dismiss the current tutorial hint. */
+	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
+	void DismissTutorial();
+
 	/** Show the game over screen. */
 	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
 	void ShowGameOver();
@@ -46,6 +54,10 @@ public:
 	/** Show the encounter complete screen with grade. */
 	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
 	void ShowEncounterComplete();
+
+	/** Show credits scroll. */
+	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
+	void ShowCredits();
 
 	/** Show/hide the pause overlay. */
 	UFUNCTION(BlueprintCallable, Category = "Anansi|HUD")
@@ -81,6 +93,10 @@ protected:
 	void DrawComboTimerBar(AAnansiCharacter* Anansi);
 	void DrawLockOnReticle(AAnansiCharacter* Anansi);
 	void DrawDifficultyDisplay();
+	void DrawCreditsScreen(float DeltaTime);
+	void DrawQuestObjective();
+	void DrawTutorialHint(float DeltaTime);
+	void DrawXPBar();
 
 private:
 	struct FFloatingDamage
@@ -113,14 +129,20 @@ private:
 	float ScreenFlashTimer = 0.0f;
 	float ScreenFlashDuration = 0.15f;
 
+	FString TutorialTitle;
+	FString TutorialBody;
+	float TutorialTimer = 0.0f;
+
 	UPROPERTY()
 	TWeakObjectPtr<class ABossBase> ActiveBoss;
 
 	bool bShowGameOver = false;
 	bool bShowPause = false;
 	bool bShowEncounterComplete = false;
+	bool bShowCredits = false;
 	float GameOverTimer = 0.0f;
 	float EncounterCompleteTimer = 0.0f;
+	float CreditsScrollY = 0.0f;
 
 	void DrawBar(float X, float Y, float Width, float Height,
 		float Percent, FLinearColor FillColor, FLinearColor BackColor, const FString& Label);

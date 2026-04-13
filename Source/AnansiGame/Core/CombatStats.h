@@ -73,6 +73,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Anansi|Stats")
 	void SetMaxCombo(int32 Combo) { MaxCombo = FMath::Max(MaxCombo, Combo); }
 
+	// -- Kill streak --------------------------------------------------------
+
+	/** Get the current kill streak count. */
+	UFUNCTION(BlueprintPure, Category = "Anansi|Stats")
+	int32 GetKillStreak() const { return KillStreak; }
+
+	/** Get the damage multiplier from the current kill streak. */
+	UFUNCTION(BlueprintPure, Category = "Anansi|Stats")
+	float GetKillStreakMultiplier() const;
+
+	/** Record a kill for streak tracking (call instead of RecordKill for streak). */
+	UFUNCTION(BlueprintCallable, Category = "Anansi|Stats")
+	void RecordStreakKill();
+
 private:
 	int32 TotalHits = 0;
 	int32 CriticalHits = 0;
@@ -84,4 +98,8 @@ private:
 	int32 TotalDeaths = 0;
 	int32 MaxCombo = 0;
 	float EncounterStartTime = 0.0f;
+
+	int32 KillStreak = 0;
+	float KillStreakTimer = 0.0f;
+	static constexpr float KillStreakWindow = 5.0f;
 };

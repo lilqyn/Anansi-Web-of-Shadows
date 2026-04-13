@@ -23,6 +23,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/PostProcessComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/DamageEvents.h"
@@ -153,6 +154,9 @@ void AAnansiCharacter::BeginPlay()
 	}
 
 	GrantInitialAbilities();
+
+	// Try to load a skeletal mesh if one has been imported
+	TryLoadSkeletalMesh();
 }
 
 void AAnansiCharacter::PossessedBy(AController* NewController)
@@ -249,6 +253,18 @@ void AAnansiCharacter::Tick(float DeltaTime)
 		const float CurrentFOV = FollowCamera->FieldOfView;
 		FollowCamera->SetFieldOfView(FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 6.0f));
 	}
+
+	// -- Coyote time tracking -----------------------------------------------
+	const bool bGroundedNow = !GetCharacterMovement()->IsFalling();
+	if (bWasGroundedLastFrame && !bGroundedNow)
+	{
+		CoyoteTimeRemaining = CoyoteTimeDuration;
+	}
+	if (CoyoteTimeRemaining > 0.0f)
+	{
+		CoyoteTimeRemaining -= DeltaTime;
+	}
+	bWasGroundedLastFrame = bGroundedNow;
 
 	// -- Wall slide check ---------------------------------------------------
 	CheckWallSlide();
@@ -435,9 +451,10 @@ void AAnansiCharacter::Input_Jump(const FInputActionValue& Value)
 		return;
 	}
 
-	// Ground jump
-	if (!GetCharacterMovement()->IsFalling())
+	// Ground jump (with coyote time)
+	if (!GetCharacterMovement()->IsFalling() || CoyoteTimeRemaining > 0.0f)
 	{
+		CoyoteTimeRemaining = 0.0f;
 		JumpCount = 0;
 		FallStartZ = GetActorLocation().Z;
 		Jump();
@@ -467,6 +484,47 @@ void AAnansiCharacter::Input_LightAttack(const FInputActionValue& Value)
 	{
 		return;
 	}
+
+	// -- Swing kick (attack while web-swinging) -----------------------------
+	if (bIsWebSwinging && MeleeDamage)
+	{
+		// Release the swing
+		Input_WebSwingRelease(Value);
+
+		// Momentum-based damage — faster swing = more damage
+		const float Speed = GetVelocity().Size();
+		const float SwingDamage = FMath::Clamp(Speed * 0.05f, 15.0f, 80.0f);
+
+		MeleeDamage->AttackRadius = 120.0f;
+		MeleeDamage->KnockbackForce = Speed * 0.8f;
+		const int32 Hits = MeleeDamage->FireAttack(SwingDamage);
+		MeleeDamage->AttackRadius = 60.0f;
+		MeleeDamage->KnockbackForce = 400.0f;
+
+		if (Hits > 0)
+		{
+			if (APlayerController* PC = Cast<APlayerController>(Controller))
+			{
+				PC->ClientStartCameraShake(UAnansiDamageShake::StaticClass());
+				if (AAnansiDevHUD* HUD = Cast<AAnansiDevHUD>(PC->GetHUD()))
+				{
+					HUD->ShowToast(FString::Printf(TEXT("SWING KICK! %.0f"), SwingDamage), FColor(0, 200, 255));
+				}
+			}
+		}
+
+		SetCharacterState(EAnansiCharacterState::Attacking);
+		FTimerHandle SwingKickTimer;
+		GetWorldTimerManager().SetTimer(SwingKickTimer, [this]()
+		{
+			if (CurrentState == EAnansiCharacterState::Attacking)
+				SetCharacterState(EAnansiCharacterState::Idle);
+		}, 0.4f, false);
+		return;
+	}
+
+	// Auto-aim: snap toward nearest enemy
+	SnapToNearestEnemy();
 
 	if (CombatComponent)
 	{
@@ -1645,7 +1703,15 @@ float AAnansiCharacter::TakeDamage(float DamageAmount, const FDamageEvent& Damag
 		return 0.0f;
 	}
 
-	const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	float FinalDamage = DamageAmount;
+
+	// Health gate — can't be one-shot from full HP (survive with 1 HP)
+	if (bHealthGateEnabled && CurrentHealth >= MaxHealth && FinalDamage >= CurrentHealth)
+	{
+		FinalDamage = CurrentHealth - 1.0f;
+	}
+
+	const float ActualDamage = Super::TakeDamage(FinalDamage, DamageEvent, EventInstigator, DamageCauser);
 	ApplyDamage(ActualDamage);
 
 	// Camera shake on damage
@@ -1964,8 +2030,144 @@ void AAnansiCharacter::CheckWallSlide()
 
 void AAnansiCharacter::PlayFootstepSound()
 {
-	// Placeholder — in production, this traces for physical material
-	// and plays the appropriate footstep sound asset.
-	// For now it's silent but the timing system is in place.
 	UE_LOG(LogAnansi, VeryVerbose, TEXT("Footstep at speed %.0f"), GetVelocity().Size2D());
+}
+
+// ---------------------------------------------------------------------------
+// Skeletal mesh auto-loader
+// ---------------------------------------------------------------------------
+
+void AAnansiCharacter::TryLoadSkeletalMesh()
+{
+	// Already has a skeletal mesh assigned
+	if (GetMesh() && GetMesh()->GetSkeletalMeshAsset())
+	{
+		// Has a real mesh — hide the placeholder cylinder
+		if (PlayerVisualMesh)
+		{
+			PlayerVisualMesh->SetVisibility(false);
+		}
+		UE_LOG(LogAnansi, Log, TEXT("TryLoadSkeletalMesh: Skeletal mesh already assigned."));
+		return;
+	}
+
+	// Scan the Characters directory for any skeletal mesh asset.
+	// This finds whatever the user imported regardless of naming.
+	const TArray<FString> SearchPaths = {
+		TEXT("/Game/Characters/Kweku/Meshes/SK_Kweku.SK_Kweku"),
+		TEXT("/Game/Characters/Kweku/Meshes/character.character"),
+		TEXT("/Game/Characters/Kweku/Meshes/character__1_.character__1_"),
+		TEXT("/Game/Characters/Kweku/Meshes/Kweku.Kweku"),
+	};
+
+	USkeletalMesh* FoundMesh = nullptr;
+
+	// Try known paths first
+	for (const FString& Path : SearchPaths)
+	{
+		FoundMesh = LoadObject<USkeletalMesh>(nullptr, *Path);
+		if (FoundMesh)
+		{
+			UE_LOG(LogAnansi, Log, TEXT("TryLoadSkeletalMesh: Found at %s"), *Path);
+			break;
+		}
+	}
+
+	// Fallback: scan asset registry for any skeletal mesh under /Game/Characters/
+	if (!FoundMesh)
+	{
+		FAssetRegistryModule& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		TArray<FAssetData> Assets;
+		AssetRegistry.Get().GetAssetsByPath(FName("/Game/Characters"), Assets, true);
+
+		for (const FAssetData& Asset : Assets)
+		{
+			if (Asset.AssetClassPath.GetAssetName() == FName("SkeletalMesh"))
+			{
+				FoundMesh = Cast<USkeletalMesh>(Asset.GetAsset());
+				if (FoundMesh)
+				{
+					UE_LOG(LogAnansi, Log, TEXT("TryLoadSkeletalMesh: Found via scan: %s"), *Asset.GetObjectPathString());
+					break;
+				}
+			}
+		}
+	}
+
+	if (FoundMesh)
+	{
+		GetMesh()->SetSkeletalMesh(FoundMesh);
+		GetMesh()->SetRelativeLocation(FVector(0, 0, -90));
+		GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
+		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+
+		if (PlayerVisualMesh)
+		{
+			PlayerVisualMesh->SetVisibility(false);
+		}
+
+		// Try to find an animation blueprint
+		const TArray<FString> AnimPaths = {
+			TEXT("/Game/Characters/Kweku/Animations/ABP_Kweku.ABP_Kweku_C"),
+			TEXT("/Game/Characters/Kweku/ABP_Kweku.ABP_Kweku_C"),
+			TEXT("/Game/Characters/ABP_Character.ABP_Character_C"),
+		};
+
+		for (const FString& AnimPath : AnimPaths)
+		{
+			UClass* AnimClass = LoadClass<UAnimInstance>(nullptr, *AnimPath);
+			if (AnimClass)
+			{
+				GetMesh()->SetAnimInstanceClass(AnimClass);
+				UE_LOG(LogAnansi, Log, TEXT("TryLoadSkeletalMesh: Applied AnimBP from %s"), *AnimPath);
+				break;
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogAnansi, Log, TEXT("TryLoadSkeletalMesh: No skeletal mesh found. Using placeholder cylinder."));
+		UE_LOG(LogAnansi, Log, TEXT("  Import an FBX from Mixamo into /Game/Characters/Kweku/Meshes/"));
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Auto-aim assist
+// ---------------------------------------------------------------------------
+
+void AAnansiCharacter::SnapToNearestEnemy(float MaxAngle, float MaxRange)
+{
+	TArray<AActor*> Enemies;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Enemy"), Enemies);
+
+	AActor* Best = nullptr;
+	float BestScore = -1.0f;
+	const FVector Forward = GetActorForwardVector();
+	const FVector Origin = GetActorLocation();
+
+	for (AActor* Enemy : Enemies)
+	{
+		if (!Enemy) continue;
+		const float Dist = FVector::Dist(Origin, Enemy->GetActorLocation());
+		if (Dist > MaxRange || Dist < 50.0f) continue;
+
+		const FVector Dir = (Enemy->GetActorLocation() - Origin).GetSafeNormal();
+		const float Dot = FVector::DotProduct(Forward, Dir);
+		const float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(Dot));
+		if (AngleDeg > MaxAngle) continue;
+
+		const float Score = Dot * (1.0f - Dist / MaxRange);
+		if (Score > BestScore)
+		{
+			BestScore = Score;
+			Best = Enemy;
+		}
+	}
+
+	if (Best)
+	{
+		const FVector Dir = (Best->GetActorLocation() - Origin).GetSafeNormal();
+		const FRotator TargetRot = Dir.Rotation();
+		SetActorRotation(FRotator(0, TargetRot.Yaw, 0));
+	}
 }
